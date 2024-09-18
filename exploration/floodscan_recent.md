@@ -22,6 +22,7 @@ jupyter:
 ```
 
 ```python
+import os
 import xarray as xr
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -75,7 +76,7 @@ recent_fs_raw_files
 
 ```python
 # can set to True to test timing
-clobber = True
+clobber = False
 
 existing_exposure_files = blob.list_container_blobs(
     name_starts_with=f"{blob.PROJECT_PREFIX}/processed/flood_exposure/{iso3}"
@@ -108,10 +109,6 @@ for blob_name in tqdm(recent_fs_raw_files):
     das.append(da_in)
 
 ds_recent = xr.concat(das, dim="date")
-```
-
-```python
-2 * (9000 / 252)
 ```
 
 ```python

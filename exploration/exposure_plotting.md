@@ -27,6 +27,7 @@ import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 import matplotlib.colors as mcolors
+import matplotlib.ticker as mticker
 
 from tqdm.auto import tqdm
 
@@ -161,7 +162,7 @@ peak_anytime = (
 ```python
 # ADM2
 
-adm2_pcode = NDJAMENA2
+adm2_pcode = MAYODANAY2
 
 adm_name = adm[adm["ADM2_PCODE"] == adm2_pcode].iloc[0]["ADM2_FR"]
 
@@ -174,7 +175,7 @@ peak_anytime_f = peak_anytime[peak_anytime["ADM2_PCODE"] == adm2_pcode].copy()
 ```python
 # ADM1
 
-adm1_pcode = SILA1
+adm1_pcode = EXTREMENORD1
 
 adm_name = adm[adm["ADM1_PCODE"] == adm1_pcode].iloc[0]["ADM1_FR"]
 
@@ -473,7 +474,7 @@ gdf_plot[cols].sort_values("rp", ascending=False).rename(
 ```
 
 ```python
-fig, ax = plt.subplots(dpi=200)
+fig, ax = plt.subplots(dpi=200, figsize=(10, 10))
 gdf_plot.plot(
     column="rp",
     ax=ax,
@@ -500,5 +501,106 @@ ax.set_title(
 ```
 
 ```python
+adm
+```
 
+```python
+# create pop tabular
+
+dicts = []
+for pcode, row in adm.set_index("ADM2_PCODE").iterrows():
+    da_in = pop.rio.clip([row.geometry])
+    dicts.append({"ADM2_PCODE": pcode, "total_population": int(da_in.sum())})
+```
+
+```python
+df_total_pop = pd.DataFrame(dicts)
+```
+
+```python
+df = df.merge(df_total_pop)
+```
+
+```python
+df["frac_exposed"] = df["total_exposed"] / df["total_population"]
+```
+
+```python
+df_max_year = (
+    df.groupby(["ADM2_PCODE", df["date"].dt.year])[
+        ["frac_exposed", "total_exposed"]
+    ]
+    .max()
+    .reset_index()
+)
+```
+
+```python
+df_max_year
+```
+
+```python
+df_avg_year = (
+    df_max_year[df_max_year["date"] < 2024]
+    .groupby("ADM2_PCODE")["total_exposed"]
+    .mean()
+    .reset_index()
+    .rename(columns={"total_exposed": "total_exposed_mean"})
+)
+```
+
+```python
+df_avg_year
+```
+
+```python
+df_max_year = df_max_year.merge(df_avg_year)
+```
+
+```python
+df_max_year["total_exposed_anom"] = (
+    df_max_year["total_exposed"] / df_max_year["total_exposed_mean"]
+)
+```
+
+```python
+df_max_year
+```
+
+```python
+plot_year = 2024
+fig, ax = plt.subplots(figsize=(8, 8), dpi=300)
+adm.merge(df_max_year[df_max_year["date"] == plot_year]).plot(
+    column="frac_exposed", ax=ax, cmap="Purples", legend=True
+)
+adm.boundary.plot(color="k", ax=ax, linewidth=0.2)
+ax.axis("off")
+ax.set_title(
+    f"Peak fraction of popoulation exposed to flooding in {plot_year}\n(as of {most_recent_date_str})"
+)
+plt.show()
+```
+
+```python
+plot_year = 2024
+fig, ax = plt.subplots(figsize=(8, 8), dpi=300)
+# Create a diverging colormap and center at 1
+div_cmap = plt.get_cmap("coolwarm")  # Choose diverging colormap
+norm = mcolors.TwoSlopeNorm(vmin=0, vcenter=1, vmax=3)  # Center at 1
+adm.merge(df_max_year[df_max_year["date"] == plot_year]).plot(
+    column="total_exposed_anom", ax=ax, cmap=div_cmap, norm=norm
+)
+adm.boundary.plot(color="k", ax=ax, linewidth=0.2)
+ax.axis("off")
+ax.set_title(
+    f"Peak anomaly of popoulation exposed to flooding in {plot_year}\n(as of {most_recent_date_str})"
+)
+sm = plt.cm.ScalarMappable(cmap=div_cmap, norm=norm)
+cbar = fig.colorbar(
+    sm, ax=ax, extend="max"
+)  # 'both' for upper and lower exceedance
+
+# Format the colorbar as a percentage
+cbar.ax.yaxis.set_major_formatter(mticker.PercentFormatter(xmax=1))
+plt.show()
 ```
