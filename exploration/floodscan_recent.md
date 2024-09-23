@@ -43,7 +43,7 @@ NDJAMENA2 = "TD1801"
 ```
 
 ```python
-iso3 = "tcd"
+iso3 = "bfa"
 ```
 
 ```python

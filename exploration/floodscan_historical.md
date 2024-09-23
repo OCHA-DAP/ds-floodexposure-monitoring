@@ -32,11 +32,15 @@ from src.utils import blob
 ```
 
 ```python
-# done re-do: TCD, CMR, NER, NGA
+# done re-do: TCD, CMR, NER, NGA, BFA
 ```
 
 ```python
-iso3 = "nga"
+iso3 = "bfa"
+```
+
+```python
+codab.download_codab_to_blob(iso3)
 ```
 
 ```python
@@ -44,11 +48,19 @@ adm = codab.load_codab_from_blob(iso3, admin_level=2)
 ```
 
 ```python
+adm.plot()
+```
+
+```python
+worldpop.download_worldpop_to_blob(iso3)
+```
+
+```python
 pop = worldpop.load_worldpop_from_blob(iso3)
 ```
 
 ```python
-pop
+pop.plot()
 ```
 
 ```python
@@ -81,7 +93,7 @@ plt.show()
 
 ```python
 verbose = True
-clobber = True
+clobber = False
 
 existing_exposure_files = blob.list_container_blobs(
     name_starts_with=f"{blob.PROJECT_PREFIX}/processed/flood_exposure/{iso3}/"
