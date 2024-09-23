@@ -1,0 +1,10 @@
+azure-storage-blob==12.22.0
+dask==2024.8.0
+geopandas==1.0.1
+matplotlib==3.9.2
+pandas==2.2.2
+plotly==5.23.0
+pyarrow==17.0.0
+rioxarray==0.17.0
+scipy==1.14.0
+xarray==2024.7.0
