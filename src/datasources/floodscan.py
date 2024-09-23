@@ -6,7 +6,7 @@ import xarray as xr
 
 from src.utils import blob
 
-DATA_DIR = Path(os.getenv("AA_DATA_DIR_NEW"))
+DATA_DIR = Path(os.getenv("AA_DATA_DIR_NEW", ""))
 RAW_FS_HIST_S_PATH = (
     DATA_DIR
     / "private"
@@ -17,6 +17,14 @@ RAW_FS_HIST_S_PATH = (
     / "SFED_historical"
     / "aer_sfed_area_300s_19980112_20231231_v05r01.nc"
 )
+
+
+def calculate_recent_flood_exposure_rasters():
+    pass
+
+
+def calculate_recent_flood_exposure_rasterstats():
+    pass
 
 
 def open_historical_floodscan():
