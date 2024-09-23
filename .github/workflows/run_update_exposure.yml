@@ -1,0 +1,35 @@
+name: Update exposure data
+
+on:
+  workflow_dispatch:
+  schedule:
+      - cron: "5 23 * * *" # 23:05 UTC, 5 minutes after ds-floodscan-ingest runs
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        ref: exposure-pipeline
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11.4'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -e .
+        python -m pip install -r requirements.txt
+
+    - name: Run script
+      env:
+        DEV_BLOB_SAS: ${{ secrets.DEV_BLOB_SAS }}
+
+      run: |
+        python pipelines/update_exposure.py
