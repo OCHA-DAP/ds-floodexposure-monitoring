@@ -39,7 +39,7 @@ NDJAMENA2 = "TD1801"
 ```
 
 ```python
-# done re-do: TCD, NER, CMR, BFA
+# done re-do: TCD, NER, CMR, BFA, NGA
 ```
 
 ```python
@@ -76,7 +76,7 @@ recent_fs_raw_files
 
 ```python
 # can set to True to test timing
-clobber = False
+clobber = True
 
 existing_exposure_files = blob.list_container_blobs(
     name_starts_with=f"{blob.PROJECT_PREFIX}/processed/flood_exposure/{iso3}"
@@ -163,7 +163,7 @@ existing_exposure_files[-1]
 
 ```python
 verbose = False
-clobber = False
+clobber = True
 
 existing_exposure_files = blob.list_container_blobs(
     name_starts_with=f"{blob.PROJECT_PREFIX}/processed/flood_exposure/{iso3}"
@@ -222,7 +222,7 @@ existing_dates
 ```
 
 ```python
-clobber = False
+clobber = True
 unprocessed_exposure_rasters = [
     x
     for x in recent_exposure_rasters
@@ -233,11 +233,17 @@ unprocessed_exposure_rasters = [
 ```
 
 ```python
+df_exp_adm_existing.groupby(df_exp_adm_existing["date"].dt.year)[
+    "total_exposed"
+].sum().plot()
+```
+
+```python
 unprocessed_exposure_rasters
 ```
 
 ```python
-clobber = False
+clobber = True
 
 if clobber:
     df_empty = pd.DataFrame(columns=["date"])

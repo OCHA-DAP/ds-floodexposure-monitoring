@@ -85,6 +85,10 @@ df = df.sort_values("date")
 ```
 
 ```python
+df
+```
+
+```python
 def calculate_rolling(group, window=7):
     group[f"roll{window}"] = (
         group["total_exposed"].rolling(window=window).mean()
@@ -175,7 +179,7 @@ peak_anytime_f = peak_anytime[peak_anytime["ADM2_PCODE"] == adm2_pcode].copy()
 ```python
 # ADM1
 
-adm1_pcode = EXTREMENORD1
+adm1_pcode = NDJAMENA1
 
 adm_name = adm[adm["ADM1_PCODE"] == adm1_pcode].iloc[0]["ADM1_FR"]
 
