@@ -33,3 +33,11 @@ jobs:
 
       run: |
         python pipelines/update_exposure.py
+
+    - name: Update app data (development)
+      run: |
+        curl -X POST https://chd-ds-floodexposure-monitoring-development.azurewebsites.net/reload-data
+
+    - name: Update app data (production)
+      run: |
+        curl -X POST https://chd-ds-floodexposure-monitoring.azurewebsites.net/reload-data
