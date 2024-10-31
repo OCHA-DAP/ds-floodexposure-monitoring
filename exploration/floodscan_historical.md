@@ -32,11 +32,11 @@ from src.utils import blob
 ```
 
 ```python
-# done re-do: TCD, CMR, NER, NGA, BFA
+# done re-do: TCD, CMR, NER, NGA, BFA, ETH
 ```
 
 ```python
-iso3 = "bfa"
+iso3 = "eth"
 ```
 
 ```python

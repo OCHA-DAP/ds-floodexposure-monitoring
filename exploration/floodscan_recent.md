@@ -39,11 +39,11 @@ NDJAMENA2 = "TD1801"
 ```
 
 ```python
-# done re-do: TCD, NER, CMR, BFA, NGA
+# done re-do: TCD, NER, CMR, BFA, NGA, ETH
 ```
 
 ```python
-iso3 = "nga"
+iso3 = "eth"
 ```
 
 ```python
@@ -76,7 +76,7 @@ recent_fs_raw_files
 
 ```python
 # can set to True to test timing
-clobber = True
+clobber = False
 
 existing_exposure_files = blob.list_container_blobs(
     name_starts_with=f"{blob.PROJECT_PREFIX}/processed/flood_exposure/{iso3}"
@@ -163,7 +163,7 @@ existing_exposure_files[-1]
 
 ```python
 verbose = False
-clobber = True
+clobber = False
 
 existing_exposure_files = blob.list_container_blobs(
     name_starts_with=f"{blob.PROJECT_PREFIX}/processed/flood_exposure/{iso3}"
@@ -222,7 +222,7 @@ existing_dates
 ```
 
 ```python
-clobber = True
+clobber = False
 unprocessed_exposure_rasters = [
     x
     for x in recent_exposure_rasters
@@ -243,7 +243,7 @@ unprocessed_exposure_rasters
 ```
 
 ```python
-clobber = True
+clobber = False
 
 if clobber:
     df_empty = pd.DataFrame(columns=["date"])
