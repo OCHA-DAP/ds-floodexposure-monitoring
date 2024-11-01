@@ -58,7 +58,7 @@ DIAMARE2 = "CM004001"
 ```
 
 ```python
-iso3 = "tcd"
+iso3 = "eth"
 ```
 
 ```python
@@ -432,7 +432,8 @@ peak_anytime_adm1 = (
 
 ```python
 gdf_plot = adm.merge(peak_anytime_adm2.set_index("date").loc[2024])
-cols = ["ADM1_FR", "ADM2_FR", "roll7", "rp"]
+# cols = ["ADM1_FR", "ADM2_FR", "roll7", "rp"]
+cols = ["ADM1_EN", "ADM2_EN", "roll7", "rp"]
 (
     gdf_plot[cols]
     .sort_values("rp", ascending=False)
@@ -471,13 +472,17 @@ ax.set_title("Return period of peak 2024 flood exposure\nby Departement")
 ```python
 gdf_plot = adm1.merge(peak_anytime_adm1.set_index("date").loc[2024])
 
-cols = ["ADM1_FR", "roll7", "rp"]
+# cols = ["ADM1_FR", "roll7", "rp"]
+cols = ["ADM1_EN", "roll7", "rp"]
 gdf_plot[cols].sort_values("rp", ascending=False).rename(
     columns={"roll7": "exposed"}
 ).iloc[:50]
 ```
 
 ```python
+# name_col = "ADM1_FR"
+name_col = "ADM1_EN"
+
 fig, ax = plt.subplots(dpi=200, figsize=(10, 10))
 gdf_plot.plot(
     column="rp",
@@ -490,7 +495,7 @@ gdf_plot.plot(
 for _, row in gdf_plot.iterrows():
     centroid = row["geometry"].centroid
     ax.annotate(
-        row["ADM1_FR"],
+        row[name_col],
         xy=(centroid.x, centroid.y),
         fontsize=6,
         color="black",
