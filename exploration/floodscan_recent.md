@@ -39,11 +39,11 @@ NDJAMENA2 = "TD1801"
 ```
 
 ```python
-# done re-do: TCD, NER, CMR, BFA, NGA, ETH
+# done re-do: TCD, NER, CMR, BFA, NGA, ETH, SOM
 ```
 
 ```python
-iso3 = "eth"
+iso3 = "som"
 ```
 
 ```python
@@ -185,7 +185,7 @@ for date in tqdm(exposure.date):
 ### Building up exposure `ds`
 
 ```python
-# done re-do: TCD, NER, CMR
+# done re-do: TCD, NER, CMR, SOM
 ```
 
 ```python
