@@ -39,11 +39,11 @@ NDJAMENA2 = "TD1801"
 ```
 
 ```python
-# done re-do: TCD, NER, CMR, BFA, NGA, ETH, SOM
+# done re-do: TCD, NER, CMR, BFA, NGA, ETH, SOM, SSD
 ```
 
 ```python
-iso3 = "som"
+iso3 = "ssd"
 ```
 
 ```python

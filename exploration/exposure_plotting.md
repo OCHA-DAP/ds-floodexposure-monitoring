@@ -55,6 +55,7 @@ EXTREMENORD1 = "CM004"
 MAYOTSANAGA2 = "CM004006"
 MAYOKANI2 = "CM004004"
 DIAMARE2 = "CM004001"
+BENISHANGUL1 = "ET06"
 ```
 
 ```python
@@ -179,9 +180,9 @@ peak_anytime_f = peak_anytime[peak_anytime["ADM2_PCODE"] == adm2_pcode].copy()
 ```python
 # ADM1
 
-adm1_pcode = NDJAMENA1
+adm1_pcode = BENISHANGUL1
 
-adm_name = adm[adm["ADM1_PCODE"] == adm1_pcode].iloc[0]["ADM1_FR"]
+adm_name = adm[adm["ADM1_PCODE"] == adm1_pcode].iloc[0]["ADM1_EN"]
 
 dff = (
     df[df["ADM1_PCODE"] == adm1_pcode]
