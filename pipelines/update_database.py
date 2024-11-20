@@ -89,7 +89,7 @@ def load_data(engine):
             schema="app",
             con=engine,
             if_exists="append",
-            chunksize=100000,
+            chunksize=10000,
             index=False,
         )
 

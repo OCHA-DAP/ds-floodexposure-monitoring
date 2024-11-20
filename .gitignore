@@ -151,4 +151,6 @@ sandbox
 temp/*
 
 */data/*
-pipelines/data
+pipelines/data/*
+pipelines/temp/*
+exploration/temp/*
