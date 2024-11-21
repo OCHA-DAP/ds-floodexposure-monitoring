@@ -33,8 +33,8 @@ if __name__ == "__main__":
             gdfs.append(gdf)
         gdf_all = pd.concat(gdfs)
         if adm == 0:
-            gdf_all_outline = gdf_all
-            gdf_all_outline.geometry = gdf_all.geometry.boundary
+            gdf_all_outline = gdf_all.copy()
+            gdf_all_outline.geometry = gdf_all_outline.geometry.boundary
             gdf_all_outline = gpd.GeoDataFrame(
                 gdf_all_outline, geometry="geometry"
             )
