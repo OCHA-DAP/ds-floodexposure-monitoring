@@ -46,22 +46,6 @@ def upload_parquet_to_blob(
     )
 
 
-def upload_gdf_as_geojson(
-    blob_name,
-    gdf,
-    stage: Literal["prod", "dev"] = "dev",
-    container_name: str = "projects",
-):
-    geojson_data = gdf.to_json()
-    upload_blob_data(
-        blob_name=blob_name,
-        data=geojson_data,
-        stage=stage,
-        content_type="application/geo+json",
-        container_name=container_name,
-    )
-
-
 def load_parquet_from_blob(
     blob_name,
     stage: Literal["prod", "dev"] = "dev",
