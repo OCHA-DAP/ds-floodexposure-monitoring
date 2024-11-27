@@ -148,5 +148,9 @@ token.json
 
 sandbox
 
-temp/
-pipelines/data
+temp/*
+
+*/data/*
+pipelines/data/*
+pipelines/temp/*
+exploration/temp/*
