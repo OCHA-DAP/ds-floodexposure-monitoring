@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 
 from src.constants import ISO3S
 from src.datasources import codab, floodscan
-from src.utils import blob
+from src.utils import blob, database
 
 load_dotenv()
 
@@ -86,13 +86,18 @@ def load_data(engine):
             if_exists="append",
             chunksize=10000,
             index=False,
+            method=database.postgres_upsert,
         )
 
 
 if __name__ == "__main__":
-    print("Populating database...")
+
     engine = create_engine(
         f"postgresql+psycopg2://{AZURE_DB_UID}:{AZURE_DB_PW_DEV}@chd-rasterstats-dev.postgres.database.azure.com/postgres"  # noqa: E501
     )
+    print("Initializing database...")
+    database.create_flood_exposure_table("flood_exposure", engine)
+
+    print("Populating database...")
     data = load_data(engine)
     print("Database update completed.")
