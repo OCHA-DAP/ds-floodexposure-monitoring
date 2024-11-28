@@ -1,7 +1,5 @@
 import os
-from pathlib import Path
 
-import geopandas as gpd
 import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
@@ -14,39 +12,36 @@ load_dotenv()
 
 AZURE_DB_PW_DEV = os.getenv("AZURE_DB_PW_DEV")
 AZURE_DB_UID = os.getenv("AZURE_DB_UID")
-LOCAL_DATA_DIR = Path("pipelines/data")
 
 
-def migrate_data_to_repo(clobber: bool = False):
-    save_path = LOCAL_DATA_DIR / "adm.shp"
-    if save_path.exists() and not clobber:
-        return
+def load_geo_data(save_to_database=True):
     adms = []
     for iso3 in ISO3S:
         print(f"loading {iso3} adm to migrate")
         gdf_in = codab.load_codab_from_blob(iso3, admin_level=2)
         adms.append(gdf_in)
     adm = pd.concat(adms, ignore_index=True)
-    adm.to_file(LOCAL_DATA_DIR / "adm.shp")
 
-
-def load_data(engine):
-    print("Loading data...")
-    migrate_data_to_repo()
-    adm = gpd.read_file(LOCAL_DATA_DIR / "adm.shp")
     for adm_level in range(3):
         adm[f"ADM{adm_level}_NAME"] = adm[f"ADM{adm_level}_EN"].fillna(
             adm[f"ADM{adm_level}_FR"]
         )
     adm.drop(columns=["geometry"], inplace=True)
     adm.columns = adm.columns.str.lower()
-    adm.to_sql(
-        "adm",
-        schema="app",
-        con=engine,
-        if_exists="replace",
-        index=False,
-    )
+    if save_to_database:
+        adm.to_sql(
+            "adm",
+            schema="app",
+            con=engine,
+            if_exists="replace",
+            index=False,
+        )
+    return adm
+
+
+def load_data(engine):
+    print("Loading data...")
+    adm = load_geo_data(save_to_database=True)
 
     def calculate_rolling(group, window=7):
         group[f"roll{window}"] = (
