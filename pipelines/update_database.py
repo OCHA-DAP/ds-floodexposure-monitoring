@@ -91,7 +91,6 @@ def load_data(engine):
 
 
 if __name__ == "__main__":
-
     engine = create_engine(
         f"postgresql+psycopg2://{AZURE_DB_UID}:{AZURE_DB_PW_DEV}@chd-rasterstats-dev.postgres.database.azure.com/postgres"  # noqa: E501
     )
