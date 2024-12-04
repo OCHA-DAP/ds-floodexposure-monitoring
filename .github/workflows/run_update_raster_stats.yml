@@ -1,9 +1,10 @@
-name: Update exposure rasters
+name: Update exposure raster stats
 
 on:
+  repository_dispatch:
+    types:
+      - trigger_exposure_raster_stats
   workflow_dispatch:
-  schedule:
-      - cron: "5 23 * * *" # 23:05 UTC, 5 minutes after ds-floodscan-ingest runs
 
 jobs:
   run-script:
@@ -30,17 +31,9 @@ jobs:
     - name: Run script
       env:
         DEV_BLOB_SAS: ${{ secrets.DEV_BLOB_SAS }}
+        AZURE_DB_PW_DEV: ${{ secrets.AZURE_DB_PW_DEV }}
+        AZURE_DB_PW_PROD: ${{ secrets.AZURE_DB_PW_PROD }}
+        AZURE_DB_UID: ${{ secrets.AZURE_DB_UID_DEV }}
 
       run: |
-        python pipelines/update_exposure.py
-
-    - name: Trigger raster stats pipeline
-      uses: actions/github-script@v5
-      with:
-        github-token: ${{ secrets.PAT }}
-        script: |
-          await github.repos.createDispatchEvent({
-              owner: 'OCHA-DAP',
-              repo: 'ds-floodexposure-monitoring',
-              event_type: 'trigger_exposure_raster_stats'
-          })
+        python pipelines/update_raster_stats.py

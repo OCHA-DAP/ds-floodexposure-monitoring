@@ -32,11 +32,11 @@ from src.utils import blob
 ```
 
 ```python
-# done re-do: TCD, CMR, NER, NGA, BFA, ETH, SOM, SSD
+# done re-do: TCD, CMR, NER, NGA, BFA, MLI
 ```
 
 ```python
-iso3 = "ssd"
+iso3 = "mli"
 ```
 
 ```python
@@ -120,8 +120,4 @@ test.plot()
 
 ```python
 blob_name
-```
-
-```python
-
 ```
