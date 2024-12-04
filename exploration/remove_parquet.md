@@ -26,7 +26,7 @@ import os
 from datetime import datetime
 
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from tqdm.auto import tqdm
 
 from src.utils import database, blob
@@ -255,6 +255,32 @@ df_plot["roll7"] = df_plot["sum"].rolling(window=7).mean()
 df_plot.max()
 ```
 
-```python
+### Check app loading data
 
+```python
+pcode = LOGONEETCHARI2
+adm_level = 2
+```
+
+```python
+query_exposure = text(
+    f"""
+    SELECT *
+    FROM app.floodscan_exposure
+    WHERE pcode=:pcode AND adm_level=:adm_level
+    """
+)
+query_adm = text("select * from app.adm")
+
+
+with engine.connect() as con:
+    df_exposure = pd.read_sql_query(
+        query_exposure, con, params={"pcode": pcode, "adm_level": adm_level}
+    )
+    df_adm = pd.read_sql_query(query_adm, con)
+    df_adm = df_adm[df_adm[f"adm{adm_level}_pcode"] == pcode]
+```
+
+```python
+df_exposure
 ```
