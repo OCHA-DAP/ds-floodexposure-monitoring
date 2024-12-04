@@ -23,9 +23,11 @@ jupyter:
 
 ```python
 import os
+from datetime import datetime
 
 import pandas as pd
 from sqlalchemy import create_engine
+from tqdm.auto import tqdm
 
 from src.utils import database, blob
 from src.datasources import floodscan, codab
@@ -75,50 +77,125 @@ df_unique_dates["date"] = pd.to_datetime(df_unique_dates["date"])
 df_unique_dates
 ```
 
+```python
+def get_existing_stats_dates(iso3: str, engine) -> list:
+    query = f"""
+    SELECT DISTINCT valid_date
+    FROM app.floodscan_exposure
+    WHERE iso3 = '{iso3.upper()}'
+    ORDER BY valid_date
+    """
+    df_unique_dates = pd.read_sql(query, con=engine)
+    df_unique_dates["valid_date"] = pd.to_datetime(
+        df_unique_dates["valid_date"]
+    )
+    return df_unique_dates["valid_date"].to_list()
+```
+
+```python
+query = f"""
+SELECT DISTINCT valid_date
+FROM app.floodscan_exposure
+WHERE iso3 = '{iso3.upper()}'
+ORDER BY valid_date
+"""
+df_unique_dates = pd.read_sql(query, con=engine)
+```
+
+```python
+df_unique_dates["valid_date"] = pd.to_datetime(df_unique_dates["valid_date"])
+```
+
+```python
+existing_dates = df_unique_dates["valid_date"].to_list()
+```
+
+```python
+df_unique_dates["valid_date"].unique()
+```
+
+```python
+datetime.strptime("1998-01-12", "%Y-%m-%d") in existing_dates
+```
+
+```python
+existing_dates
+```
+
+```python
+existing_exposure_rasters = [
+    x
+    for x in blob.list_container_blobs(
+        name_starts_with=f"{blob.PROJECT_PREFIX}/processed/"
+        f"flood_exposure/{iso3}/"
+    )
+    if x.endswith(".tif")
+]
+```
+
+```python
+existing_dates = get_existing_stats_dates(iso3, engine)
+```
+
+```python
+clobber = False
+```
+
+```python
+unprocessed_exposure_rasters = [
+    x
+    for x in existing_exposure_rasters
+    if datetime.strptime(x.split("/")[-1][13:23], "%Y-%m-%d")
+    not in existing_dates
+    or clobber
+]
+```
+
+```python
+unprocessed_exposure_rasters
+```
+
 ## Populate historical
 
 ```python
-blob_name = floodscan.get_blob_name(iso3, "exposure_tabular")
-```
+for iso3 in tqdm(ISO3S):
+    print(iso3)
+    adm2 = codab.load_codab_from_blob(iso3, admin_level=2)
+    blob_name = floodscan.get_blob_name(iso3, "exposure_tabular")
 
-```python
-df_historical = blob.load_parquet_from_blob(blob_name)
-```
+    df_historical = blob.load_parquet_from_blob(blob_name)
 
-```python
-df_historical = df_historical.merge(
-    adm2[[x for x in adm2.columns if "PCODE" in x]]
-)
-```
+    df_historical = df_historical.merge(
+        adm2[[x for x in adm2.columns if "PCODE" in x]]
+    )
 
-```python
-for adm_level in [0, 1, 2]:
-    print(adm_level)
-    pcode_col = f"ADM{adm_level}_PCODE"
-    df_agg = (
-        df_historical.groupby(["date", pcode_col])["total_exposed"]
-        .sum()
-        .reset_index()
-    )
-    df_agg["adm_level"] = adm_level
-    df_agg["iso3"] = iso3.upper()
-    df_agg = df_agg.rename(
-        columns={
-            "total_exposed": "sum",
-            pcode_col: "pcode",
-            "date": "valid_date",
-        }
-    )
-    display(df_agg)
-    df_agg.to_sql(
-        "floodscan_exposure",
-        schema="app",
-        con=engine,
-        if_exists="append",
-        chunksize=10000,
-        index=False,
-        method=database.postgres_upsert,
-    )
+    for adm_level in [0, 1, 2]:
+        print(adm_level)
+        pcode_col = f"ADM{adm_level}_PCODE"
+        df_agg = (
+            df_historical.groupby(["date", pcode_col])["total_exposed"]
+            .sum()
+            .reset_index()
+        )
+        df_agg["adm_level"] = adm_level
+        df_agg["iso3"] = iso3.upper()
+        df_agg = df_agg.rename(
+            columns={
+                "total_exposed": "sum",
+                pcode_col: "pcode",
+                "date": "valid_date",
+            }
+        )
+        display(df_agg)
+        df_agg.to_sql(
+            "floodscan_exposure",
+            schema="app",
+            con=engine,
+            if_exists="append",
+            chunksize=10000,
+            index=False,
+            method=database.postgres_upsert,
+        )
 ```
 
 ### Check timing
