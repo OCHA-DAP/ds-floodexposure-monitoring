@@ -1,3 +1,6 @@
+import os
+from typing import Literal
+
 from sqlalchemy import (
     CHAR,
     REAL,
@@ -8,8 +11,30 @@ from sqlalchemy import (
     String,
     Table,
     UniqueConstraint,
+    create_engine,
 )
 from sqlalchemy.dialects.postgresql import insert
+
+AZURE_DB_PW_DEV = os.getenv("AZURE_DB_PW_DEV")
+AZURE_DB_PW_PROD = os.getenv("AZURE_DB_PW_PROD")
+AZURE_DB_UID = os.getenv("AZURE_DB_UID")
+AZURE_DB_BASE_URL = "postgresql+psycopg2://{uid}:{pw}@{db_name}.postgres.database.azure.com/postgres"  # noqa: E501
+
+
+def get_engine(stage: Literal["dev", "prod"] = "dev"):
+    if stage == "dev":
+        url = AZURE_DB_BASE_URL.format(
+            uid=AZURE_DB_UID, pw=AZURE_DB_PW_DEV, db_name="chd-rasterstats-dev"
+        )
+    elif stage == "prod":
+        url = AZURE_DB_BASE_URL.format(
+            uid=AZURE_DB_UID,
+            pw=AZURE_DB_PW_PROD,
+            db_name="chd-rasterstats-prod",
+        )
+    else:
+        raise ValueError(f"Invalid stage: {stage}")
+    return create_engine(url)
 
 
 def create_flood_exposure_table(dataset, engine):
@@ -31,17 +56,13 @@ def create_flood_exposure_table(dataset, engine):
     metadata = MetaData()
     columns = [
         Column("iso3", CHAR(3)),
-        Column("adm0_pcode", String),
-        Column("adm1_pcode", String),
-        Column("adm2_pcode", String),
-        Column("date", Date),
-        Column("eff_date", Date),
-        Column("dayofyear", Integer),
-        Column("total_exposed", REAL),
-        Column("roll7", REAL),
+        Column("adm_level", Integer),
+        Column("valid_date", Date),
+        Column("pcode", String),
+        Column("sum", REAL),
     ]
 
-    unique_constraint_columns = ["adm2_pcode", "date"]
+    unique_constraint_columns = ["pcode", "valid_date"]
 
     Table(
         f"{dataset}",
@@ -62,7 +83,7 @@ def create_flood_exposure_table(dataset, engine):
 def postgres_upsert(table, conn, keys, data_iter, constraint=None):
     """
     Perform an upsert (insert or update) operation on a PostgreSQL table. Adapted from:
-    https://stackoverflow.com/questions/55187884/insert-into-postgresql-table-from-pandas-with-on-conflict-update
+    https://stackoverflow.com/questions/55187884/insert-into-postgresql-table-from-pandas-with-on-conflict-update # noqa: E501
 
     Parameters
     ----------
@@ -73,7 +94,8 @@ def postgres_upsert(table, conn, keys, data_iter, constraint=None):
     keys : list of str
         The list of column names used as keys for the upsert operation.
     data_iter : iterable
-        An iterable of tuples or lists containing the data to be inserted or updated.
+        An iterable of tuples or lists containing the data to be inserted or
+        updated.
     constraint_name : str
         Name of the uniqueness constraint
 
