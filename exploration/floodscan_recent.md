@@ -43,7 +43,7 @@ NDJAMENA2 = "TD1801"
 ```
 
 ```python
-iso3 = "mli"
+iso3 = "cod"
 ```
 
 ```python
