@@ -64,10 +64,6 @@ if __name__ == "__main__":
                 date_in = datetime.strptime(
                     blob_name.split("/")[-1][13:23], "%Y-%m-%d"
                 )
-                if date_in in existing_dates and not clobber:
-                    if verbose:
-                        print(f"already processed for {date_in}, skipping")
-                    continue
                 try:
                     da_in = blob.open_blob_cog(blob_name)
                     da_in["date"] = date_in

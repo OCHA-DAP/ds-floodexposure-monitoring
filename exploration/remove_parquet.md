@@ -35,6 +35,11 @@ from src.constants import *
 ```
 
 ```python
+EXTREMENORD1 = "CM004"
+LOGONEETCHARI2 = "CM004002"
+```
+
+```python
 iso3 = "cmr"
 ```
 
