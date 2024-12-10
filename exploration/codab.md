@@ -41,3 +41,19 @@ for iso3 in ISO3S:
     adm = codab.load_codab_from_blob(iso3)
     adm.plot()
 ```
+
+```python
+tcd_test = codab.load_codab_from_blob("tcd")
+```
+
+```python
+tcd_test.dissolve().plot()
+```
+
+```python
+tcd_test[[True, False]].plot()
+```
+
+```python
+tcd_test[[False, True]].plot()
+```

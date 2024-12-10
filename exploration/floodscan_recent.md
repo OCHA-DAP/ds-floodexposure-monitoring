@@ -39,11 +39,11 @@ NDJAMENA2 = "TD1801"
 ```
 
 ```python
-# done re-do: TCD, NER, CMR
+# done re-do: TCD, NER, CMR, BFA, NGA, ETH, SOM, SSD, MLI
 ```
 
 ```python
-iso3 = "bfa"
+iso3 = "cod"
 ```
 
 ```python
@@ -185,7 +185,7 @@ for date in tqdm(exposure.date):
 ### Building up exposure `ds`
 
 ```python
-# done re-do: TCD, NER, CMR
+# done re-do: TCD, NER, CMR, SOM, MLI
 ```
 
 ```python
@@ -230,6 +230,12 @@ unprocessed_exposure_rasters = [
     not in existing_dates
     or clobber
 ]
+```
+
+```python
+df_exp_adm_existing.groupby(df_exp_adm_existing["date"].dt.year)[
+    "total_exposed"
+].sum().plot()
 ```
 
 ```python

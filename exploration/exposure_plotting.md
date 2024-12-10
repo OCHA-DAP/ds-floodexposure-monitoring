@@ -36,7 +36,10 @@ from src.utils import blob
 from src.constants import *
 ```
 
+## Load data
+
 ```python
+# specific PCODEs for testing
 NDJAMENA2 = "TD1801"
 NDJAMENA1 = "TD18"
 SILA1 = "TD21"
@@ -55,10 +58,11 @@ EXTREMENORD1 = "CM004"
 MAYOTSANAGA2 = "CM004006"
 MAYOKANI2 = "CM004004"
 DIAMARE2 = "CM004001"
+BENISHANGUL1 = "ET06"
 ```
 
 ```python
-iso3 = "tcd"
+iso3 = "eth"
 ```
 
 ```python
@@ -83,6 +87,12 @@ df = blob.load_parquet_from_blob(blob_name)
 df = df.merge(adm[["ADM1_PCODE", "ADM2_PCODE"]])
 df = df.sort_values("date")
 ```
+
+```python
+df
+```
+
+## Process data
 
 ```python
 def calculate_rolling(group, window=7):
@@ -120,6 +130,7 @@ most_recent_date_str
 ```python
 val_col = f"roll{window}"
 
+#
 seasonal = (
     df[df["date"].dt.year < 2024]
     .groupby(["ADM1_PCODE", "ADM2_PCODE", "dayofyear"])[val_col]
@@ -140,11 +151,13 @@ today_dayofyear
 ```
 
 ```python
-df_past_month = df_to_today[df_to_today["dayofyear"] >= today_dayofyear - 30]
-```
+# calculate yearly peaks
 
-```python
+df_past_month = df_to_today[df_to_today["dayofyear"] >= today_dayofyear - 30]
+
+# set True to take only peaks up to this current day
 up_to_today = True
+# set True to only consider past month
 past_month_only = False
 
 df_for_peaks = df_to_today if up_to_today else df
@@ -159,6 +172,10 @@ peak_anytime = (
 )
 ```
 
+### Admin2
+
+Run this cell only for admin2-level plots
+
 ```python
 # ADM2
 
@@ -172,12 +189,16 @@ seasonal_f = seasonal[seasonal["ADM2_PCODE"] == adm2_pcode]
 peak_anytime_f = peak_anytime[peak_anytime["ADM2_PCODE"] == adm2_pcode].copy()
 ```
 
+### Admin1
+
+Run this cell only for admin1-level plots
+
 ```python
 # ADM1
 
-adm1_pcode = EXTREMENORD1
+adm1_pcode = BENISHANGUL1
 
-adm_name = adm[adm["ADM1_PCODE"] == adm1_pcode].iloc[0]["ADM1_FR"]
+adm_name = adm[adm["ADM1_PCODE"] == adm1_pcode].iloc[0]["ADM1_EN"]
 
 dff = (
     df[df["ADM1_PCODE"] == adm1_pcode]
@@ -204,6 +225,10 @@ peak_anytime_f = (
 )
 ```
 
+### Admin0
+
+Run this cell only for admin0-level plots
+
 ```python
 # ADM0
 
@@ -222,6 +247,10 @@ seasonal_f = seasonal.groupby("eff_date")[val_col].sum().reset_index()
 peak_anytime_f = peak_anytime.groupby("date")[val_col].sum().reset_index()
 ```
 
+### All
+
+Run this cell for any admin level plot - calculates RP
+
 ```python
 # process for plotting
 rp = 3
@@ -235,6 +264,10 @@ peak_anytime_f["rp"] = len(peak_anytime_f) / peak_anytime_f["rank"]
 peak_anytime_f[f"{rp}yr_rp"] = peak_anytime_f["rp"] >= rp
 peak_years = peak_anytime_f[peak_anytime_f[f"{rp}yr_rp"]]["date"].to_list()
 ```
+
+## Plots
+
+### Timeseries
 
 ```python
 # time series
@@ -287,6 +320,8 @@ fig.update_yaxes(rangemode="tozero", title="Population exposed to flooding")
 fig.update_xaxes(title="Date")
 fig.show()
 ```
+
+### Return period
 
 ```python
 # return period
@@ -356,6 +391,8 @@ fig.update_xaxes(title="Return period (years)")
 fig.show()
 ```
 
+### Yearly time series
+
 ```python
 peak_anytime_f = peak_anytime_f.sort_values("date")
 
@@ -381,6 +418,8 @@ fig.update_yaxes(title="Total population exposed to flooding during the year")
 fig.update_xaxes(title="Year")
 fig.show()
 ```
+
+### Current situation comparison across country
 
 ```python
 # current situation
@@ -428,7 +467,8 @@ peak_anytime_adm1 = (
 
 ```python
 gdf_plot = adm.merge(peak_anytime_adm2.set_index("date").loc[2024])
-cols = ["ADM1_FR", "ADM2_FR", "roll7", "rp"]
+# cols = ["ADM1_FR", "ADM2_FR", "roll7", "rp"]
+cols = ["ADM1_EN", "ADM2_EN", "roll7", "rp"]
 (
     gdf_plot[cols]
     .sort_values("rp", ascending=False)
@@ -436,6 +476,8 @@ cols = ["ADM1_FR", "ADM2_FR", "roll7", "rp"]
     .iloc[:50]
 )
 ```
+
+#### Admin2 choropleth
 
 ```python
 fig, ax = plt.subplots(dpi=200)
@@ -467,13 +509,19 @@ ax.set_title("Return period of peak 2024 flood exposure\nby Departement")
 ```python
 gdf_plot = adm1.merge(peak_anytime_adm1.set_index("date").loc[2024])
 
-cols = ["ADM1_FR", "roll7", "rp"]
+# cols = ["ADM1_FR", "roll7", "rp"]
+cols = ["ADM1_EN", "roll7", "rp"]
 gdf_plot[cols].sort_values("rp", ascending=False).rename(
     columns={"roll7": "exposed"}
 ).iloc[:50]
 ```
 
+#### Admin1 choropleth
+
 ```python
+# name_col = "ADM1_FR"
+name_col = "ADM1_EN"
+
 fig, ax = plt.subplots(dpi=200, figsize=(10, 10))
 gdf_plot.plot(
     column="rp",
@@ -486,7 +534,7 @@ gdf_plot.plot(
 for _, row in gdf_plot.iterrows():
     centroid = row["geometry"].centroid
     ax.annotate(
-        row["ADM1_FR"],
+        row[name_col],
         xy=(centroid.x, centroid.y),
         fontsize=6,
         color="black",
@@ -500,9 +548,7 @@ ax.set_title(
 )
 ```
 
-```python
-adm
-```
+## Other
 
 ```python
 # create pop tabular
