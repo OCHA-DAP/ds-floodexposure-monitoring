@@ -8,8 +8,9 @@ population exposed to flooding for countries in Africa.
 Runs daily on a GH Action, timed to run after the Floodscan data is updated
 by [ds-floodscan-ingest](https://github.com/OCHA-DAP/ds-floodscan-ingest).
 
-To run locally, set the environment variables `DEV_BLOB_SAS` and
-`PROD_BLOB_SAS`, and set up a virtual environment and install the requirements:
+To run locally, set the environment variables `DEV_BLOB_SAS`,
+`PROD_BLOB_SAS`, `AZURE_DB_PW_DEV`, `AZURE_DB_PW_PROD`, `AZURE_DB_UID`,
+and set up a virtual environment and install the requirements:
 
 ```shell
 pip install -r requirements.txt
@@ -20,6 +21,7 @@ Then run the pipeline with:
 
 ```shell
 python pipelines/update_exposure.py
+python pipelines/update_raster_stats.py
 ```
 
 ## Structure
@@ -27,20 +29,22 @@ python pipelines/update_exposure.py
 ```plaintext
 .
 ├── .github/
-│   └── ...                 # GH Action workflow
+│   └── ...                    # GH Action workflow
 ├── exploration/
-│   └── ...                 # notebooks for exploration
+│   └── ...                    # notebooks for exploration
 ├── pipelines/
-│   └── update_exposure.py  # script for running pipeline
+│   ├── update_exposure.py     # script for updating exposure rasters
+│   └── update_raster_stats.py # script for updating exposure raster stats
 └── src/
     ├── datasources/
-    │   ├── codab.py        # downloading and loading CODABs
-    │   ├── floodscan.py    # functions to calculate exposure, load Floodscan
-    │   └── worldpop.py     # load and download Worldpop population rasters
+    │   ├── codab.py           # downloading and loading CODABs
+    │   ├── floodscan.py       # functions to calculate exposure, load Floodscan
+    │   └── worldpop.py        # load and download Worldpop population rasters
     ├── utils/
-    │   ├── blob.py         # read and write for Azure blob storage
-    │   └── raster.py       # just function to upsample rasters
-    └── constants.py        # constants
+    │   ├── blob.py            # read and write for Azure blob storage
+    │   ├── database.py        # read and write to Postgres DB
+    │   └── raster.py          # just function to upsample rasters
+    └── constants.py           # constants
 ```
 
 ## Development
