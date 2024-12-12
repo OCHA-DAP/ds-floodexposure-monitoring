@@ -27,6 +27,16 @@ from src.constants import *
 ```
 
 ```python
+engine = database.get_engine()
+```
+
+```python
+database.create_flood_exposure_region_table(
+    "floodscan_exposure_regions", database.get_engine()
+)
+```
+
+```python
 for region in REGIONS:
     print(region)
 ```
@@ -37,4 +47,8 @@ SELECT *
 FROM app.floodscan_exposure
 WHERE iso=:pcode AND adm_level=:adm_level
 """
+```
+
+```python
+query
 ```

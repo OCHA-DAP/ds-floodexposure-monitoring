@@ -13,18 +13,21 @@ REGIONS = [
     {
         "adm_level": 1,
         "iso3": "cod",
+        "region_number": 1,
         "region_name": "Zone 1",
         "pcodes": [BASUELE1, HAUTUELE1, TSHOPO1],
     },
     {
         "adm_level": 1,
         "iso3": "cod",
+        "region_number": 2,
         "region_name": "Zone 2",
         "pcodes": [NORDKIVU1, SUDKIVU1],
     },
     {
         "adm_level": 1,
         "iso3": "cod",
+        "region_number": 3,
         "region_name": "Zone 3",
         "pcodes": [TANGANYIKA1],
     },
