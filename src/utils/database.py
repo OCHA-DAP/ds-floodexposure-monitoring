@@ -1,6 +1,7 @@
 import os
 from typing import Literal
 
+from dotenv import load_dotenv
 from sqlalchemy import (
     CHAR,
     REAL,
@@ -14,6 +15,8 @@ from sqlalchemy import (
     create_engine,
 )
 from sqlalchemy.dialects.postgresql import insert
+
+load_dotenv()
 
 AZURE_DB_PW_DEV = os.getenv("AZURE_DB_PW_DEV")
 AZURE_DB_PW_PROD = os.getenv("AZURE_DB_PW_PROD")
