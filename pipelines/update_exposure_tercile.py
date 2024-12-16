@@ -32,16 +32,15 @@ ROLLING_QUERY = text(
         FROM target_dates t
         JOIN app.floodscan_exposure d
             ON d.pcode = t.pcode
-            AND d.valid_date BETWEEN t.valid_date - INTERVAL '{ROLL_WINDOW-1} days' AND t.valid_date  # noqa
+            AND d.valid_date BETWEEN t.valid_date - INTERVAL '{ROLL_WINDOW-1} days' AND t.valid_date
     )
     SELECT
         pcode,
         adm_level,
         target_date as valid_date,
-        AVG(daily_sum) as rolling_avg,
-        sum
+        AVG(daily_sum) as rolling_avg
     FROM date_ranges
-    GROUP BY pcode, adm_level, target_date, sum
+    GROUP BY pcode, adm_level, target_date
     ORDER BY pcode, target_date;
     """
 )
@@ -56,7 +55,7 @@ def assign_tercile(row, boundaries):
         1: Above upper tercile
     """
     pcode_bounds = boundaries.loc[row["pcode"]]
-    value = row["sum"]
+    value = row["rolling_avg"]
     if value < pcode_bounds["lower_tercile"]:
         return -1
     elif value <= pcode_bounds["upper_tercile"]:
