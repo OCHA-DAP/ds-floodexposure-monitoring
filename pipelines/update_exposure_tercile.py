@@ -65,7 +65,7 @@ def assign_tercile(row, boundaries):
 
 
 if __name__ == "__main__":
-    target_date = datetime.today() - timedelta(days=3)
+    target_date = datetime.today() - timedelta(days=1)
     engine = database.get_engine()
 
     print(f"Computing terciles as of {target_date.strftime('%Y-%m-%d')}")
