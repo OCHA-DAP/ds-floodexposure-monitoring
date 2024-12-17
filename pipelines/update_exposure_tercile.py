@@ -128,6 +128,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     save_df(df_standard, target_date, engine, "current_tercile")
-    save_df(df_region, target_date, engine, "current_tercile_region")
+    save_df(df_region, target_date, engine, "current_tercile_regions")
 
     print("Done!")
