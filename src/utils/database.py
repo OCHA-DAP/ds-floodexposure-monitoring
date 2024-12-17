@@ -1,12 +1,13 @@
 import os
 from typing import Literal
 
+from dotenv import load_dotenv
 from sqlalchemy import (
     CHAR,
     REAL,
+    TEXT,
     Column,
     Date,
-    Integer,
     MetaData,
     String,
     Table,
@@ -14,6 +15,8 @@ from sqlalchemy import (
     create_engine,
 )
 from sqlalchemy.dialects.postgresql import insert
+
+load_dotenv()
 
 AZURE_DB_PW_DEV = os.getenv("AZURE_DB_PW_DEV")
 AZURE_DB_PW_PROD = os.getenv("AZURE_DB_PW_PROD")
@@ -37,31 +40,6 @@ def get_engine(stage: Literal["dev", "prod"] = "dev"):
     return create_engine(url)
 
 
-def create_flood_exposure_region_table(dataset, engine):
-    metadata = MetaData()
-    columns = [
-        Column("iso3", CHAR(3)),
-        Column("region_number", Integer),
-        Column("valid_date", Date),
-        Column("sum", REAL),
-    ]
-
-    unique_constraint_columns = ["iso3", "region_number", "valid_date"]
-
-    Table(
-        f"{dataset}",
-        metadata,
-        *columns,
-        UniqueConstraint(
-            *unique_constraint_columns,
-            name=f"{dataset}_unique",
-            postgresql_nulls_not_distinct=True,
-        ),
-        schema="app",
-    )
-    metadata.create_all(engine)
-
-
 def create_flood_exposure_table(dataset, engine):
     """
     Create a table for storing flood exposure data in the database.
@@ -81,7 +59,7 @@ def create_flood_exposure_table(dataset, engine):
     metadata = MetaData()
     columns = [
         Column("iso3", CHAR(3)),
-        Column("adm_level", Integer),
+        Column("adm_level", TEXT),
         Column("valid_date", Date),
         Column("pcode", String),
         Column("sum", REAL),
