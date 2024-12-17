@@ -103,7 +103,7 @@ def save_df(df, sel_date, engine, output_table, id_col="pcode"):
 
 
 if __name__ == "__main__":
-    target_date = datetime.today() - timedelta(days=2)
+    target_date = datetime.today() - timedelta(days=1)
     engine = database.get_engine()
 
     print(f"Computing terciles as of {target_date.strftime('%Y-%m-%d')}")
