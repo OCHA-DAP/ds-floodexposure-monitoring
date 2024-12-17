@@ -10,42 +10,8 @@ from src.utils import database
 ROLL_WINDOW = 7
 
 
-def rolling_query(regions=False):
-
-    rolling_query_regions = text(
-        f"""
-        WITH target_dates AS (
-            SELECT
-                region_number,
-                valid_date,
-                sum as original_sum
-            FROM app.floodscan_exposure_regions
-            WHERE EXTRACT(MONTH FROM valid_date) = :month
-                AND EXTRACT(DAY FROM valid_date) = :day
-        ),
-        date_ranges AS (
-            SELECT
-                t.region_number,
-                t.valid_date as target_date,
-                t.original_sum as sum,
-                d.valid_date,
-                d.sum as daily_sum
-            FROM target_dates t
-            JOIN app.floodscan_exposure_regions d
-                ON d.region_number = t.region_number
-                AND d.valid_date BETWEEN t.valid_date - INTERVAL '{ROLL_WINDOW-1} days' AND t.valid_date
-        )
-        SELECT
-            region_number,
-            target_date as valid_date,
-            AVG(daily_sum) as rolling_avg
-        FROM date_ranges
-        GROUP BY region_number, target_date
-        ORDER BY region_number, target_date;
-    """
-    )
-
-    rolling_query_standard = text(
+def rolling_query(table_name):
+    return text(
         f"""
         WITH target_dates AS (
             SELECT
@@ -53,7 +19,7 @@ def rolling_query(regions=False):
                 adm_level,
                 valid_date,
                 sum as original_sum
-            FROM app.floodscan_exposure
+            FROM app.{table_name}
             WHERE EXTRACT(MONTH FROM valid_date) = :month
                 AND EXTRACT(DAY FROM valid_date) = :day
         ),
@@ -66,7 +32,7 @@ def rolling_query(regions=False):
                 d.valid_date,
                 d.sum as daily_sum
             FROM target_dates t
-            JOIN app.floodscan_exposure d
+            JOIN app.{table_name} d
                 ON d.pcode = t.pcode
                 AND d.valid_date BETWEEN t.valid_date - INTERVAL '{ROLL_WINDOW-1} days' AND t.valid_date
         )
@@ -81,10 +47,8 @@ def rolling_query(regions=False):
         """
     )
 
-    return rolling_query_regions if regions else rolling_query_standard
 
-
-def assign_tercile(row, boundaries, id_col):
+def assign_tercile(row, boundaries, id_col="pcode"):
     """
     Assign tercile values based on boundaries.
     Returns:
@@ -102,7 +66,7 @@ def assign_tercile(row, boundaries, id_col):
         return 1
 
 
-def save_df(df, id_col, sel_date, engine, output_table):
+def save_df(df, sel_date, engine, output_table, id_col="pcode"):
 
     if df.empty:
         print(
@@ -150,12 +114,12 @@ if __name__ == "__main__":
         with engine.connect() as con:
             print("Calculating rolling averages and getting data from db...")
             df_standard = pd.read_sql_query(
-                rolling_query(regions=False),
+                rolling_query("floodscan_exposure"),
                 con,
                 params={"month": target_date.month, "day": target_date.day},
             )
             df_region = pd.read_sql_query(
-                rolling_query(regions=True),
+                rolling_query("floodscan_exposure_regions"),
                 con,
                 params={"month": target_date.month, "day": target_date.day},
             )
@@ -163,13 +127,7 @@ if __name__ == "__main__":
         print(f"Error querying database: {e}")
         sys.exit(1)
 
-    save_df(df_standard, "pcode", target_date, engine, "current_tercile")
-    save_df(
-        df_region,
-        "region_number",
-        target_date,
-        engine,
-        "current_tercile_region",
-    )
+    save_df(df_standard, target_date, engine, "current_tercile")
+    save_df(df_region, target_date, engine, "current_tercile_region")
 
     print("Done!")
