@@ -17,6 +17,8 @@ def get_existing_adm_stats(pcodes: List[str], engine) -> pd.DataFrame:
 
 if __name__ == "__main__":
     engine = database.get_engine(stage="dev")
+    table_name = "floodscan_exposure_regions"
+    database.create_flood_exposure_table(table_name, engine)
 
     for region in REGIONS:
         print(f"Processing {region['iso3']} region {region['region_number']}")
@@ -29,11 +31,13 @@ if __name__ == "__main__":
             f'{region["iso3"]}_region_{region["region_number"]}'
         )
         region_stats_df["adm_level"] = "region"
+
         region_stats_df.to_sql(
-            "floodscan_exposure_regions",
+            table_name,
             schema="app",
             con=engine,
-            if_exists="replace",
+            if_exists="append",
             chunksize=10000,
             index=False,
+            method=database.postgres_upsert,
         )
