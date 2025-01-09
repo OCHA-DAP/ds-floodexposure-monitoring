@@ -27,7 +27,7 @@ def calculate_recent_flood_exposure_rasters(
     iso3: str, clobber: bool = False, verbose: bool = False
 ):
     """
-    Calculate recent (2024 onwards) flood exposure rasters for a given country.
+    Calculate recent (2025 onwards) flood exposure rasters for a given country.
     Parameters
     ----------
     iso3: str
@@ -51,9 +51,9 @@ def calculate_recent_flood_exposure_rasters(
         )
         if x.endswith(".tif")
     ]
-    # filter to only 2024 onwards
+    # filter to only 2025 onwards
     recent_fs_raw_files = [
-        x for x in existing_fs_raw_files if "300s_2024" in x
+        x for x in existing_fs_raw_files if "300s_2025" in x
     ]
     # check for existing processed exposure rasters
     existing_exposure_files = blob.list_container_blobs(
@@ -121,7 +121,7 @@ def calculate_recent_flood_exposure_rasterstats(
     iso3: str, clobber: bool = False, verbose: bool = False
 ):
     """
-    Calculate recent (2024 onwards) flood exposure sums for a given country.
+    Calculate recent (2025 onwards) flood exposure sums for a given country.
     Only calculates for admin level 2.
     Parameters
     ----------
