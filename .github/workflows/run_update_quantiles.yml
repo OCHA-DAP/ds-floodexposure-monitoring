@@ -1,9 +1,9 @@
-name: Update terciles
+name: Update quantiles
 
 on:
   repository_dispatch:
     types:
-      - trigger_compute_terciles
+      - trigger_compute_quantiles
   workflow_dispatch:
 
 jobs:
@@ -34,4 +34,4 @@ jobs:
         AZURE_DB_UID: ${{ secrets.AZURE_DB_UID_DEV }}
 
       run: |
-        python pipelines/update_exposure_tercile.py
+        python pipelines/update_exposure_quantile.py
