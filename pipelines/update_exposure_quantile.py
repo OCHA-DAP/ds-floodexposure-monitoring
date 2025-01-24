@@ -48,22 +48,22 @@ def rolling_query(table_name):
     )
 
 
-def assign_tercile(row, boundaries, id_col="pcode"):
+def assign_quantile(row, boundaries, id_col="pcode"):
     """
-    Assign tercile values based on boundaries.
-    Returns:
-        -1: Below lower tercile
-        0: Between terciles
-        1: Above upper tercile
+    Assign quintile coded values based on boundaries.
     """
     pcode_bounds = boundaries.loc[row[id_col]]
     value = row["rolling_avg"]
-    if value < pcode_bounds["lower_tercile"]:
+    if value < pcode_bounds["lower_quintile"]:
+        return -2
+    elif value < pcode_bounds["lower_mid_quintile"]:
         return -1
-    elif value <= pcode_bounds["upper_tercile"]:
+    elif value <= pcode_bounds["upper_mid_quintile"]:
         return 0
-    else:
+    elif value < pcode_bounds["upper_quintile"]:
         return 1
+    else:
+        return 2
 
 
 def save_df(df, sel_date, engine, output_table, id_col="pcode"):
@@ -74,14 +74,16 @@ def save_df(df, sel_date, engine, output_table, id_col="pcode"):
         )
         sys.exit(0)
 
-    print("Computing terciles...")
-    tercile_boundaries = df.groupby(id_col)["rolling_avg"].agg(
-        lower_tercile=lambda x: np.percentile(x, 33.33),
-        upper_tercile=lambda x: np.percentile(x, 66.67),
+    print("Computing quantiles...")
+    quantile_boundaries = df.groupby(id_col)["rolling_avg"].agg(
+        lower_quintile=lambda x: np.percentile(x, 20),
+        lower_mid_quintile=lambda x: np.percentile(x, 40),
+        upper_mid_quintile=lambda x: np.percentile(x, 60),
+        upper_quintile=lambda x: np.percentile(x, 80),
     )
 
-    df["tercile"] = df.apply(
-        lambda row: assign_tercile(row, tercile_boundaries, id_col), axis=1
+    df["quantile"] = df.apply(
+        lambda row: assign_quantile(row, quantile_boundaries, id_col), axis=1
     )
 
     df["valid_date"] = pd.to_datetime(df["valid_date"])
@@ -106,7 +108,7 @@ if __name__ == "__main__":
     target_date = datetime.today() - timedelta(days=1)
     engine = database.get_engine()
 
-    print(f"Computing terciles as of {target_date.strftime('%Y-%m-%d')}")
+    print(f"Computing quantiles as of {target_date.strftime('%Y-%m-%d')}")
     print(f"Using {ROLL_WINDOW}-day rolling average")
 
     # Get data and calculate rolling averages
@@ -127,7 +129,7 @@ if __name__ == "__main__":
         print(f"Error querying database: {e}")
         sys.exit(1)
 
-    save_df(df_standard, target_date, engine, "current_tercile")
-    save_df(df_region, target_date, engine, "current_tercile_regions")
+    save_df(df_standard, target_date, engine, "current_quantile")
+    save_df(df_region, target_date, engine, "current_quantile_regions")
 
     print("Done!")
