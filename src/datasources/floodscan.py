@@ -7,6 +7,7 @@ import pandas as pd
 import xarray as xr
 from tqdm.auto import tqdm
 
+from constants import FLOODSCAN_COG_FILEPATH
 from src.datasources import codab, worldpop
 from src.utils import blob
 
@@ -27,7 +28,9 @@ def calculate_recent_flood_exposure_rasters(
     iso3: str, clobber: bool = False, verbose: bool = False
 ):
     """
-    Calculate recent (2025 onwards) flood exposure rasters for a given country.
+    Calculate recent flood exposure rasters for a given country.
+    Only looks to update data from the current year onwards.
+
     Parameters
     ----------
     iso3: str
@@ -39,21 +42,21 @@ def calculate_recent_flood_exposure_rasters(
 
     Returns
     -------
-
     """
     pop = worldpop.load_worldpop_from_blob(iso3)
     # check for existing raw Floodscan rasters
     existing_fs_raw_files = [
         x
         for x in blob.list_container_blobs(
-            name_starts_with="raster/cogs/aer_area_300s_",
-            container_name="global",
+            name_starts_with=f"{FLOODSCAN_COG_FILEPATH}/aer_area_300s",
+            container_name="raster",
         )
         if x.endswith(".tif")
     ]
-    # filter to only 2025 onwards
+    # filter to only this year onwards
+    this_year = datetime.today().year
     recent_fs_raw_files = [
-        x for x in existing_fs_raw_files if "300s_2025" in x
+        x for x in existing_fs_raw_files if f"300s_{this_year}" in x
     ]
     # check for existing processed exposure rasters
     existing_exposure_files = blob.list_container_blobs(
@@ -64,7 +67,9 @@ def calculate_recent_flood_exposure_rasters(
     # stack up relevant raw Floodscan rasters
     das = []
     for blob_name in tqdm(recent_fs_raw_files):
-        date_in = datetime.strptime(blob_name.split("/")[-1][14:22], "%Y%m%d")
+        date_in = datetime.strptime(
+            blob_name.split("/")[-1][15:25], "%Y-%m-%d"
+        )
         date_str = date_in.strftime("%Y-%m-%d")
         exposure_blob_name = get_blob_name(
             iso3, "exposure_raster", date=date_str
@@ -121,8 +126,8 @@ def calculate_recent_flood_exposure_rasterstats(
     iso3: str, clobber: bool = False, verbose: bool = False
 ):
     """
-    Calculate recent (2025 onwards) flood exposure sums for a given country.
-    Only calculates for admin level 2.
+    Calculate recent (current year onwards) flood exposure sums for a
+    given country. Only calculates for admin level 2.
     Parameters
     ----------
     iso3: str
