@@ -32,5 +32,3 @@ REGIONS = [
         "pcodes": [TANGANYIKA1],
     },
 ]
-
-FLOODSCAN_COG_FILEPATH = "floodscan/daily/v5/processed"

@@ -7,7 +7,6 @@ import pandas as pd
 import xarray as xr
 from tqdm.auto import tqdm
 
-from constants import FLOODSCAN_COG_FILEPATH
 from src.datasources import codab, worldpop
 from src.utils import blob
 
@@ -48,7 +47,7 @@ def calculate_recent_flood_exposure_rasters(
     existing_fs_raw_files = [
         x
         for x in blob.list_container_blobs(
-            name_starts_with=f"{FLOODSCAN_COG_FILEPATH}/aer_area_300s",
+            name_starts_with=f"{blob.FLOODSCAN_COG_FILEPATH}/aer_area_300s",
             container_name="raster",
         )
         if x.endswith(".tif")
@@ -128,6 +127,7 @@ def calculate_recent_flood_exposure_rasterstats(
     """
     Calculate recent (current year onwards) flood exposure sums for a
     given country. Only calculates for admin level 2.
+
     Parameters
     ----------
     iso3: str
