@@ -55,7 +55,7 @@ def calculate_recent_flood_exposure_rasters(
     # filter to only this year onwards
     this_year = datetime.today().year
     recent_fs_raw_files = [
-        x for x in existing_fs_raw_files if f"300s_{this_year}" in x
+        x for x in existing_fs_raw_files if f"300s_v{this_year}" in x
     ]
     # check for existing processed exposure rasters
     existing_exposure_files = blob.list_container_blobs(
@@ -77,7 +77,7 @@ def calculate_recent_flood_exposure_rasters(
             if verbose:
                 print(f"already processed for {date_str}, skipping")
             continue
-        da_in = blob.open_blob_cog(blob_name, container_name="global")
+        da_in = blob.open_blob_cog(blob_name, container_name="raster")
         long_name = da_in.attrs["long_name"]
         if long_name == ("SFED", "MFED"):
             da_in = da_in.isel(band=0)
