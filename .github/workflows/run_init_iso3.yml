@@ -7,14 +7,6 @@ on:
           description: 'Three-letter ISO country code'
           required: True
           type: string
-        stage:
-          description: 'Environment stage'
-          required: true
-          default: 'prod'
-          type: choice
-          options:
-              - prod
-              - dev
 
 jobs:
   run-script:
@@ -40,7 +32,7 @@ jobs:
       env:
         DEV_BLOB_SAS: ${{ secrets.DEV_BLOB_SAS }}
         PROD_BLOB_SAS: ${{ secrets.PROD_BLOB_SAS }}
-        STAGE: ${{ github.event.inputs.stage }}
+        STAGE: ${{ vars.STAGE}}
 
 
       run: |
