@@ -21,15 +21,13 @@ def download_codab_to_blob(iso3: str, clobber: bool = False):
     url = FIELDMAPS_BASE_URL.format(iso3=iso3)
     response = requests.get(url)
     response.raise_for_status()
-    blob.upload_blob_data(blob_name, response.content, stage="dev")
+    blob.upload_blob_data(blob_name, response.content)
 
 
 def load_codab_from_blob(iso3: str, admin_level: int = 0):
     iso3 = iso3.lower()
     shapefile = f"{iso3}_adm{admin_level}.shp"
     gdf = blob.load_gdf_from_blob(
-        blob_name=get_blob_name(iso3),
-        shapefile=shapefile,
-        stage="dev",
+        blob_name=get_blob_name(iso3), shapefile=shapefile
     )
     return gdf
