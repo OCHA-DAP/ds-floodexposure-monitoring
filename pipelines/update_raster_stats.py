@@ -26,6 +26,6 @@ if __name__ == "__main__":
     database.create_flood_exposure_table(table_name_regions, engine)
     for region in REGIONS:
         print(f"Processing {region['iso3']} region {region['region_number']}")
-        floodscan.calculate_exposure_rasterstats_regions(
+        floodscan.calculate_flood_exposure_rasterstats_regions(
             region=region, engine=engine, output_table=table_name_regions
         )
