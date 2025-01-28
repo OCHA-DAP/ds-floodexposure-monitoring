@@ -121,6 +121,22 @@ def postgres_upsert(table, conn, keys, data_iter, constraint=None):
 
 
 def get_existing_stats_dates(iso3: str, engine) -> list:
+    """
+    Retrieve list of dates for which flood statistics exist
+    for a given country.
+
+    Parameters
+    ----------
+    iso3 : str
+        Three-letter ISO country code
+    engine : Engine
+        SQLAlchemy database engine
+
+    Returns
+    -------
+    list
+        Dates with existing flood statistics
+    """
     query = f"""
     SELECT DISTINCT valid_date
     FROM app.floodscan_exposure
@@ -135,6 +151,21 @@ def get_existing_stats_dates(iso3: str, engine) -> list:
 
 
 def get_existing_adm_stats(pcodes: List[str], engine) -> pd.DataFrame:
+    """
+    Fetch flood exposure statistics for specified administrative regions.
+
+    Parameters
+    ----------
+    pcodes : List[str]
+        List of administrative region codes
+    engine : Engine
+        SQLAlchemy database engine
+
+    Returns
+    -------
+    pd.DataFrame
+        Flood exposure statistics for requested regions
+    """
     query = f"""
     SELECT *
     FROM app.floodscan_exposure
