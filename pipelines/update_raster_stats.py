@@ -24,7 +24,9 @@ def get_existing_stats_dates(iso3: str, engine) -> list:
 
 
 if __name__ == "__main__":
-    engine = database.get_engine(stage="dev")
+    engine = database.get_engine(stage=database.STAGE)
+    table_name = "floodscan_exposure"
+    database.create_flood_exposure_table(table_name, engine)
     clobber = False
     verbose = False
 
@@ -134,7 +136,7 @@ if __name__ == "__main__":
                     print("uploading to DB:")
                     print(df_agg)
                 df_agg.to_sql(
-                    "floodscan_exposure",
+                    table_name,
                     schema="app",
                     con=engine,
                     if_exists="append",

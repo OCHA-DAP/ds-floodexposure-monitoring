@@ -16,7 +16,7 @@ def get_existing_adm_stats(pcodes: List[str], engine) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    engine = database.get_engine(stage="dev")
+    engine = database.get_engine(stage=database.STAGE)
     table_name = "floodscan_exposure_regions"
     database.create_flood_exposure_table(table_name, engine)
 

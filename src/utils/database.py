@@ -22,9 +22,10 @@ AZURE_DB_PW_DEV = os.getenv("AZURE_DB_PW_DEV")
 AZURE_DB_PW_PROD = os.getenv("AZURE_DB_PW_PROD")
 AZURE_DB_UID = os.getenv("AZURE_DB_UID")
 AZURE_DB_BASE_URL = "postgresql+psycopg2://{uid}:{pw}@{db_name}.postgres.database.azure.com/postgres"  # noqa: E501
+STAGE = os.getenv("STAGE")
 
 
-def get_engine(stage: Literal["dev", "prod"] = "dev"):
+def get_engine(stage: Literal["dev", "prod"] = STAGE):
     if stage == "dev":
         url = AZURE_DB_BASE_URL.format(
             uid=AZURE_DB_UID, pw=AZURE_DB_PW_DEV, db_name="chd-rasterstats-dev"
