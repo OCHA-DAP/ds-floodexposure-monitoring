@@ -22,7 +22,19 @@ Then run the pipeline with:
 ```shell
 python pipelines/update_exposure.py
 python pipelines/update_raster_stats.py
+python pipelines/update_exposure_quantile.py
 ```
+
+### To add data for a new ISO3 code
+
+1. Add the code to the list of ISO3s in `src.constants.py`,
+commit the changes, and open a new PR
+
+2. Initialize the required datasets by running
+
+```shell
+python pipelines/init_iso3.py --iso3 <new-iso3-code>
+````
 
 ## Structure
 
