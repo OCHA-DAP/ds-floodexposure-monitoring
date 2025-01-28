@@ -19,6 +19,6 @@ if __name__ == "__main__":
         print(f"Initializing data for {iso3}...")
         codab.download_codab_to_blob(iso3)
         worldpop.download_worldpop_to_blob(iso3)
-        floodscan.calculate_flood_exposure_rasters(iso3=iso3, recent=True)
+        floodscan.calculate_flood_exposure_rasters(iso3=iso3, recent=False)
 
     print("Done!")
