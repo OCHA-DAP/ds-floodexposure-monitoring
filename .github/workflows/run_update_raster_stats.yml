@@ -35,7 +35,6 @@ jobs:
 
       run: |
         python pipelines/update_raster_stats.py
-        python pipelines/update_raster_stats_regions.py
 
     - name: Trigger quantile calculations
       env:
