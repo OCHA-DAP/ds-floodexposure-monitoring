@@ -1,6 +1,4 @@
-import os
 from datetime import datetime
-from pathlib import Path
 from typing import Literal
 
 import pandas as pd
@@ -10,18 +8,6 @@ from tqdm.auto import tqdm
 
 from src.datasources import codab, worldpop
 from src.utils import blob, database
-
-DATA_DIR = Path(os.getenv("AA_DATA_DIR_NEW", ""))
-RAW_FS_HIST_S_PATH = (
-    DATA_DIR
-    / "private"
-    / "raw"
-    / "glb"
-    / "FloodScan"
-    / "SFED"
-    / "SFED_historical"
-    / "aer_sfed_area_300s_19980112_20231231_v05r01.nc"
-)
 
 
 def calculate_flood_exposure_rasters(
@@ -302,23 +288,6 @@ def calculate_flood_exposure_rasterstats_regions(
         index=False,
         method=database.postgres_upsert,
     )
-
-
-def open_historical_floodscan():
-    """
-    Open the historical Floodscan dataset, as a netCDF on the
-    Google Drive.
-    Returns
-    -------
-    xr.DataArray
-        Floodscan dataset
-    """
-    chunks = {"lat": 1080, "lon": 1080, "time": 1}
-    ds = xr.open_dataset(RAW_FS_HIST_S_PATH, chunks=chunks)
-    da = ds["SFED_AREA"]
-    da = da.rio.set_spatial_dims(x_dim="lon", y_dim="lat")
-    da = da.rio.write_crs(4326)
-    return da
 
 
 def get_blob_name(
