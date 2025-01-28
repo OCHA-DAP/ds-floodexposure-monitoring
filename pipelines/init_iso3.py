@@ -9,7 +9,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     input_iso3 = args.iso3
 
-    if not input_iso3:
+    if input_iso3 == "all":
         print("Initializing for all available ISO3s")
         iso3s = ISO3S
     else:
