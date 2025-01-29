@@ -14,8 +14,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-PROD_BLOB_SAS = os.getenv("PROD_BLOB_SAS")
-DEV_BLOB_SAS = os.getenv("DEV_BLOB_SAS")
+PROD_BLOB_SAS = os.getenv("DSCI_AZ_SAS_PROD")
+DEV_BLOB_SAS = os.getenv("DSCI_AZ_SAS_DEV")
 
 PROJECT_PREFIX = "ds-floodexposure-monitoring"
 FLOODSCAN_COG_FILEPATH = "floodscan/daily/v5/processed"
