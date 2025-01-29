@@ -19,11 +19,10 @@ DEV_BLOB_SAS = os.getenv("DEV_BLOB_SAS")
 
 PROJECT_PREFIX = "ds-floodexposure-monitoring"
 FLOODSCAN_COG_FILEPATH = "floodscan/daily/v5/processed"
-STAGE = os.getenv("STAGE")
 
 
 def get_container_client(
-    container_name: str = "projects", stage: Literal["prod", "dev"] = STAGE
+    container_name: str = "projects", stage: Literal["prod", "dev"] = "dev"
 ):
     sas = DEV_BLOB_SAS if stage == "dev" else PROD_BLOB_SAS
     container_url = (
@@ -36,7 +35,7 @@ def get_container_client(
 def upload_parquet_to_blob(
     blob_name,
     df,
-    stage: Literal["prod", "dev"] = STAGE,
+    stage: Literal["prod", "dev"] = "dev",
     container_name: str = "projects",
     **kwargs,
 ):
@@ -50,7 +49,7 @@ def upload_parquet_to_blob(
 
 def load_parquet_from_blob(
     blob_name,
-    stage: Literal["prod", "dev"] = STAGE,
+    stage: Literal["prod", "dev"] = "dev",
     container_name: str = "projects",
 ):
     blob_data = load_blob_data(
@@ -62,7 +61,7 @@ def load_parquet_from_blob(
 def upload_csv_to_blob(
     blob_name,
     df,
-    stage: Literal["prod", "dev"] = STAGE,
+    stage: Literal["prod", "dev"] = "dev",
     container_name: str = "projects",
     **kwargs,
 ):
@@ -77,7 +76,7 @@ def upload_csv_to_blob(
 
 def load_csv_from_blob(
     blob_name,
-    stage: Literal["prod", "dev"] = STAGE,
+    stage: Literal["prod", "dev"] = "dev",
     container_name: str = "projects",
     **kwargs,
 ):
@@ -87,7 +86,7 @@ def load_csv_from_blob(
     return pd.read_csv(io.BytesIO(blob_data), **kwargs)
 
 
-def upload_gdf_to_blob(gdf, blob_name, stage: Literal["prod", "dev"] = STAGE):
+def upload_gdf_to_blob(gdf, blob_name, stage: Literal["prod", "dev"] = "dev"):
     with tempfile.TemporaryDirectory() as temp_dir:
         # File paths for shapefile components within the temp directory
         shp_base_path = os.path.join(temp_dir, "data")
@@ -109,7 +108,7 @@ def upload_gdf_to_blob(gdf, blob_name, stage: Literal["prod", "dev"] = STAGE):
 
 
 def load_gdf_from_blob(
-    blob_name, shapefile: str = None, stage: Literal["prod", "dev"] = STAGE
+    blob_name, shapefile: str = None, stage: Literal["prod", "dev"] = "dev"
 ):
     blob_data = load_blob_data(blob_name, stage=stage)
     with zipfile.ZipFile(io.BytesIO(blob_data), "r") as zip_ref:
@@ -124,7 +123,7 @@ def load_gdf_from_blob(
 
 def load_blob_data(
     blob_name,
-    stage: Literal["prod", "dev"] = STAGE,
+    stage: Literal["prod", "dev"] = "dev",
     container_name: str = "projects",
 ):
     container_client = get_container_client(
@@ -138,7 +137,7 @@ def load_blob_data(
 def upload_blob_data(
     blob_name,
     data,
-    stage: Literal["prod", "dev"] = STAGE,
+    stage: Literal["prod", "dev"] = "dev",
     container_name: str = "projects",
     content_type: str = None,
 ):
@@ -161,7 +160,7 @@ def upload_blob_data(
 
 def list_container_blobs(
     name_starts_with=None,
-    stage: Literal["prod", "dev"] = STAGE,
+    stage: Literal["prod", "dev"] = "dev",
     container_name: str = "projects",
 ):
     container_client = get_container_client(
@@ -177,7 +176,7 @@ def list_container_blobs(
 
 def get_blob_url(
     blob_name,
-    stage: Literal["prod", "dev"] = STAGE,
+    stage: Literal["prod", "dev"] = "dev",
     container_name: str = "projects",
 ):
     container_client = get_container_client(
@@ -189,7 +188,7 @@ def get_blob_url(
 
 def open_blob_cog(
     blob_name,
-    stage: Literal["prod", "dev"] = STAGE,
+    stage: Literal["prod", "dev"] = "dev",
     container_name: str = "projects",
     chunks=None,
 ):
@@ -204,7 +203,7 @@ def open_blob_cog(
 def upload_cog_to_blob(
     blob_name: str,
     da: xr.DataArray,
-    stage: Literal["prod", "dev"] = STAGE,
+    stage: Literal["prod", "dev"] = "dev",
     container_name: str = "projects",
 ):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".tif") as tmpfile:

@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from sqlalchemy import text
 
+from src.constants import STAGE
 from src.utils import database
 
 ROLL_WINDOW = 7
@@ -106,7 +107,7 @@ def save_df(df, sel_date, engine, output_table, id_col="pcode"):
 
 if __name__ == "__main__":
     target_date = datetime.today() - timedelta(days=1)
-    engine = database.get_engine()
+    engine = database.get_engine(stage=STAGE)
 
     print(f"Computing quantiles as of {target_date.strftime('%Y-%m-%d')}")
     print(f"Using {ROLL_WINDOW}-day rolling average")

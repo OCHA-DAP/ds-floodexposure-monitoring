@@ -6,6 +6,7 @@ import xarray as xr
 from sqlalchemy.engine import Engine
 from tqdm.auto import tqdm
 
+from src.constants import STAGE
 from src.datasources import codab, worldpop
 from src.utils import blob, database
 
@@ -40,6 +41,7 @@ def calculate_flood_exposure_rasters(
         for x in blob.list_container_blobs(
             name_starts_with=f"{blob.FLOODSCAN_COG_FILEPATH}/aer_area_300s",
             container_name="raster",
+            stage=STAGE,
         )
         if x.endswith(".tif")
     ]
@@ -57,7 +59,8 @@ def calculate_flood_exposure_rasters(
     # check for existing processed exposure rasters
     existing_exposure_files = blob.list_container_blobs(
         name_starts_with=f"{blob.PROJECT_PREFIX}/processed/flood_exposure/"
-        f"{iso3}"
+        f"{iso3}",
+        stage=STAGE,
     )
 
     # stack up relevant raw Floodscan rasters
@@ -74,7 +77,9 @@ def calculate_flood_exposure_rasters(
             if verbose:
                 print(f"already processed for {date_str}, skipping")
             continue
-        da_in = blob.open_blob_cog(blob_name, container_name="raster")
+        da_in = blob.open_blob_cog(
+            blob_name, container_name="raster", stage=STAGE
+        )
         long_name = da_in.attrs["long_name"]
         if long_name == ("SFED", "MFED"):
             da_in = da_in.isel(band=0)
@@ -102,7 +107,8 @@ def calculate_flood_exposure_rasters(
     exposure = ds_recent_filtered.interp_like(pop, method="nearest") * pop
     existing_exposure_files = blob.list_container_blobs(
         name_starts_with=f"{blob.PROJECT_PREFIX}/processed/flood_exposure/"
-        f"{iso3}"
+        f"{iso3}",
+        stage=STAGE,
     )
 
     # iterate over dates and upload COGs to blob storage
@@ -115,7 +121,9 @@ def calculate_flood_exposure_rasters(
             continue
         if verbose:
             print(f"uploading {blob_name}")
-        blob.upload_cog_to_blob(blob_name, exposure.sel(date=date))
+        blob.upload_cog_to_blob(
+            blob_name, exposure.sel(date=date), stage=STAGE
+        )
 
 
 def calculate_flood_exposure_rasterstats(
@@ -156,7 +164,8 @@ def calculate_flood_exposure_rasterstats(
         x
         for x in blob.list_container_blobs(
             name_starts_with=f"{blob.PROJECT_PREFIX}/processed/"
-            f"flood_exposure/{iso3}/"
+            f"flood_exposure/{iso3}/",
+            stage=STAGE,
         )
         if x.endswith(".tif")
     ]
@@ -186,7 +195,7 @@ def calculate_flood_exposure_rasterstats(
                 blob_name.split("/")[-1][13:23], "%Y-%m-%d"
             )
             try:
-                da_in = blob.open_blob_cog(blob_name)
+                da_in = blob.open_blob_cog(blob_name, stage=STAGE)
                 da_in["date"] = date_in
                 da_in = da_in.persist()
                 das.append(da_in)
