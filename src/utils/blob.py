@@ -18,6 +18,7 @@ PROD_BLOB_SAS = os.getenv("PROD_BLOB_SAS")
 DEV_BLOB_SAS = os.getenv("DEV_BLOB_SAS")
 
 PROJECT_PREFIX = "ds-floodexposure-monitoring"
+FLOODSCAN_COG_FILEPATH = "floodscan/daily/v5/processed"
 
 
 def get_container_client(

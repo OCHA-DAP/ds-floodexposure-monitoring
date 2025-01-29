@@ -29,13 +29,14 @@ jobs:
     - name: Run script
       env:
         DEV_BLOB_SAS: ${{ secrets.DEV_BLOB_SAS }}
+        PROD_BLOB_SAS: ${{ secrets.PROD_BLOB_SAS }}
         AZURE_DB_PW_DEV: ${{ secrets.AZURE_DB_PW_DEV }}
         AZURE_DB_PW_PROD: ${{ secrets.AZURE_DB_PW_PROD }}
         AZURE_DB_UID: ${{ secrets.AZURE_DB_UID_DEV }}
+        STAGE: ${{ vars.STAGE}}
 
       run: |
         python pipelines/update_raster_stats.py
-        python pipelines/update_raster_stats_regions.py
 
     - name: Trigger quantile calculations
       env:

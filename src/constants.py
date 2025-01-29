@@ -1,3 +1,11 @@
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+STAGE = os.getenv("STAGE")
+
 ISO3S = ["ner", "nga", "cmr", "tcd", "bfa", "eth", "som", "ssd", "mli", "cod"]
 CHD_GREEN = "#1bb580"
 

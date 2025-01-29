@@ -28,6 +28,8 @@ jobs:
     - name: Run script
       env:
         DEV_BLOB_SAS: ${{ secrets.DEV_BLOB_SAS }}
+        PROD_BLOB_SAS: ${{ secrets.PROD_BLOB_SAS }}
+        STAGE: ${{ vars.STAGE }}
 
       run: |
         python pipelines/update_exposure.py

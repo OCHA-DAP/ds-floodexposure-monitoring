@@ -1,70 +1,74 @@
-import os
 from datetime import datetime
-from pathlib import Path
 from typing import Literal
 
 import pandas as pd
 import xarray as xr
+from sqlalchemy.engine import Engine
 from tqdm.auto import tqdm
 
+from src.constants import STAGE
 from src.datasources import codab, worldpop
-from src.utils import blob
-
-DATA_DIR = Path(os.getenv("AA_DATA_DIR_NEW", ""))
-RAW_FS_HIST_S_PATH = (
-    DATA_DIR
-    / "private"
-    / "raw"
-    / "glb"
-    / "FloodScan"
-    / "SFED"
-    / "SFED_historical"
-    / "aer_sfed_area_300s_19980112_20231231_v05r01.nc"
-)
+from src.utils import blob, database
 
 
-def calculate_recent_flood_exposure_rasters(
-    iso3: str, clobber: bool = False, verbose: bool = False
+def calculate_flood_exposure_rasters(
+    iso3: str,
+    clobber: bool = False,
+    recent: bool = True,
+    verbose: bool = False,
 ):
     """
-    Calculate recent (2025 onwards) flood exposure rasters for a given country.
+    Calculate flood exposure rasters for a given country.
+
     Parameters
     ----------
     iso3: str
         ISO3 code of the country
     clobber: bool
         Whether to overwrite existing data
+    recent: bool
+        Whether to look only for data from the current year
     verbose: bool
         Whether to print progress of specific dates
 
     Returns
     -------
-
     """
     pop = worldpop.load_worldpop_from_blob(iso3)
     # check for existing raw Floodscan rasters
     existing_fs_raw_files = [
         x
         for x in blob.list_container_blobs(
-            name_starts_with="raster/cogs/aer_area_300s_",
-            container_name="global",
+            name_starts_with=blob.FLOODSCAN_COG_FILEPATH,
+            container_name="raster",
+            stage=STAGE,
         )
         if x.endswith(".tif")
     ]
-    # filter to only 2025 onwards
-    recent_fs_raw_files = [
-        x for x in existing_fs_raw_files if "300s_2025" in x
-    ]
+
+    # filter to only this year onwards
+    if recent:
+        this_year = datetime.today().year
+        fs_raw_files = [
+            x for x in existing_fs_raw_files if f"300s_v{this_year}" in x
+        ]
+    # or check all files
+    else:
+        fs_raw_files = existing_fs_raw_files
+
     # check for existing processed exposure rasters
     existing_exposure_files = blob.list_container_blobs(
         name_starts_with=f"{blob.PROJECT_PREFIX}/processed/flood_exposure/"
-        f"{iso3}"
+        f"{iso3}",
+        stage=STAGE,
     )
 
     # stack up relevant raw Floodscan rasters
     das = []
-    for blob_name in tqdm(recent_fs_raw_files):
-        date_in = datetime.strptime(blob_name.split("/")[-1][14:22], "%Y%m%d")
+    for blob_name in tqdm(fs_raw_files):
+        date_in = datetime.strptime(
+            blob_name.split("/")[-1][15:25], "%Y-%m-%d"
+        )
         date_str = date_in.strftime("%Y-%m-%d")
         exposure_blob_name = get_blob_name(
             iso3, "exposure_raster", date=date_str
@@ -73,7 +77,9 @@ def calculate_recent_flood_exposure_rasters(
             if verbose:
                 print(f"already processed for {date_str}, skipping")
             continue
-        da_in = blob.open_blob_cog(blob_name, container_name="global")
+        da_in = blob.open_blob_cog(
+            blob_name, container_name="raster", stage=STAGE
+        )
         long_name = da_in.attrs["long_name"]
         if long_name == ("SFED", "MFED"):
             da_in = da_in.isel(band=0)
@@ -101,7 +107,8 @@ def calculate_recent_flood_exposure_rasters(
     exposure = ds_recent_filtered.interp_like(pop, method="nearest") * pop
     existing_exposure_files = blob.list_container_blobs(
         name_starts_with=f"{blob.PROJECT_PREFIX}/processed/flood_exposure/"
-        f"{iso3}"
+        f"{iso3}",
+        stage=STAGE,
     )
 
     # iterate over dates and upload COGs to blob storage
@@ -114,59 +121,62 @@ def calculate_recent_flood_exposure_rasters(
             continue
         if verbose:
             print(f"uploading {blob_name}")
-        blob.upload_cog_to_blob(blob_name, exposure.sel(date=date))
+        blob.upload_cog_to_blob(
+            blob_name, exposure.sel(date=date), stage=STAGE
+        )
 
 
-def calculate_recent_flood_exposure_rasterstats(
-    iso3: str, clobber: bool = False, verbose: bool = False
+def calculate_flood_exposure_rasterstats(
+    iso3: str,
+    engine: Engine,
+    clobber: bool = False,
+    verbose: bool = False,
+    output_table: str = "floodscan_exposure",
 ):
     """
-    Calculate recent (2025 onwards) flood exposure sums for a given country.
-    Only calculates for admin level 2.
+    Calculate flood exposure statistics from raster data for a given country.
+
+    This function processes flood exposure raster data for a specified country,
+    calculates exposure statistics at different administrative levels,
+    and stores the results in a PostgreSQL database.
+
     Parameters
     ----------
-    iso3: str
-        ISO3 code of the country
-    clobber: bool
-        Whether to overwrite existing data
-    verbose: bool
-        Whether to print progress of specific dates
+    iso3 : str
+        Three-letter ISO country code
+    engine : sqlalchemy.engine.Engine
+        SQLAlchemy database engine for PostgreSQL connection
+    clobber : bool, optional
+        If True, reprocess existing dates. Default is False
+    verbose : bool, optional
+        If True, print additional processing information. Default is False
+    output_table : str, optional
+        Name of the output database table. Default is "floodscan_exposure"
 
     Returns
     -------
+    None
+        Results are written directly to the database
 
     """
     adm = codab.load_codab_from_blob(iso3, admin_level=2)
-    # check for existing exposure rasters
-    recent_exposure_rasters = [
+    existing_exposure_rasters = [
         x
         for x in blob.list_container_blobs(
             name_starts_with=f"{blob.PROJECT_PREFIX}/processed/"
-            f"flood_exposure/{iso3}/"
+            f"flood_exposure/{iso3}/",
+            stage=STAGE,
         )
         if x.endswith(".tif")
     ]
-    # load existing exposure tabular data
-    blob_name = get_blob_name(iso3, "exposure_tabular")
-    try:
-        df_exp_adm_existing = blob.load_parquet_from_blob(blob_name)
-    except Exception as e:
-        print(e)
-        df_exp_adm_existing = pd.DataFrame(columns=["date"])
-
-    existing_dates = df_exp_adm_existing["date"].unique()
-    # filter to only unprocessed exposure rasters
+    existing_dates = database.get_existing_stats_dates(iso3, engine)
     unprocessed_exposure_rasters = [
         x
-        for x in recent_exposure_rasters
+        for x in existing_exposure_rasters
         if datetime.strptime(x.split("/")[-1][13:23], "%Y-%m-%d")
         not in existing_dates
         or clobber
     ]
-    if clobber:
-        df_empty = pd.DataFrame(columns=["date"])
-        blob_name = get_blob_name(iso3, "exposure_tabular")
-        blob.upload_parquet_to_blob(blob_name, df_empty, index=False)
 
     # break list of exposure rasters into chunks, to avoid memory issues
     # chunk length is arbitrary, but seems to work fine
@@ -178,29 +188,14 @@ def calculate_recent_flood_exposure_rasterstats(
 
     # iterate over chunks
     for exposure_raster_chunk in tqdm(exposure_raster_chunks):
-        blob_name = get_blob_name(iso3, "exposure_tabular")
-        try:
-            df_exp_adm_existing = blob.load_parquet_from_blob(blob_name)
-        except Exception as e:
-            print(e)
-            df_exp_adm_existing = pd.DataFrame(columns=["date"])
-
-        existing_dates = df_exp_adm_existing["date"].unique()
-        if verbose:
-            print(existing_dates)
-
         # stack up exposure rasters in chunk
         das = []
         for blob_name in tqdm(exposure_raster_chunk):
             date_in = datetime.strptime(
                 blob_name.split("/")[-1][13:23], "%Y-%m-%d"
             )
-            if date_in in existing_dates and not clobber:
-                if verbose:
-                    print(f"already processed for {date_in}, skipping")
-                continue
             try:
-                da_in = blob.open_blob_cog(blob_name)
+                da_in = blob.open_blob_cog(blob_name, stage=STAGE)
                 da_in["date"] = date_in
                 da_in = da_in.persist()
                 das.append(da_in)
@@ -236,33 +231,72 @@ def calculate_recent_flood_exposure_rasterstats(
         if verbose:
             print(df_exp_adm_new)
 
-        df_exp_adm_combined = pd.concat(
-            [df_exp_adm_existing, df_exp_adm_new], ignore_index=True
+        # aggregate to admin levels and upload
+        df_exp_adm_new = df_exp_adm_new.merge(
+            adm[[x for x in adm.columns if "PCODE" in x]]
         )
         if verbose:
-            print(df_exp_adm_combined)
+            print("new raster stats calculated:")
+            print(df_exp_adm_new)
 
-        blob_name = get_blob_name(iso3, "exposure_tabular")
-        blob.upload_parquet_to_blob(
-            blob_name, df_exp_adm_combined, index=False
-        )
+        for adm_level in [0, 1, 2]:
+            if verbose:
+                print("aggregating to adm level:")
+                print(adm_level)
+            pcode_col = f"ADM{adm_level}_PCODE"
+            df_agg = (
+                df_exp_adm_new.groupby(["date", pcode_col])["total_exposed"]
+                .sum()
+                .reset_index()
+            )
+            df_agg["adm_level"] = adm_level
+            df_agg["iso3"] = iso3.upper()
+            df_agg = df_agg.rename(
+                columns={
+                    "total_exposed": "sum",
+                    pcode_col: "pcode",
+                    "date": "valid_date",
+                }
+            )
+            if verbose:
+                print("uploading to DB:")
+                print(df_agg)
+            df_agg.to_sql(
+                output_table,
+                schema="app",
+                con=engine,
+                if_exists="append",
+                chunksize=10000,
+                index=False,
+                method=database.postgres_upsert,
+            )
 
 
-def open_historical_floodscan():
-    """
-    Open the historical Floodscan dataset, as a netCDF on the
-    Google Drive.
-    Returns
-    -------
-    xr.DataArray
-        Floodscan dataset
-    """
-    chunks = {"lat": 1080, "lon": 1080, "time": 1}
-    ds = xr.open_dataset(RAW_FS_HIST_S_PATH, chunks=chunks)
-    da = ds["SFED_AREA"]
-    da = da.rio.set_spatial_dims(x_dim="lon", y_dim="lat")
-    da = da.rio.write_crs(4326)
-    return da
+def calculate_flood_exposure_rasterstats_regions(
+    region: dict,
+    engine: Engine,
+    output_table: str = "floodscan_exposure_regions",
+):
+    print(f"Processing {region['iso3']} region {region['region_number']}")
+    adm_stats_df = database.get_existing_adm_stats(region["pcodes"], engine)
+    region_stats_df = (
+        adm_stats_df.groupby("valid_date")["sum"].sum().reset_index()
+    )
+    region_stats_df["iso3"] = region["iso3"].upper()
+    region_stats_df["pcode"] = (
+        f'{region["iso3"]}_region_{region["region_number"]}'
+    )
+    region_stats_df["adm_level"] = "region"
+
+    region_stats_df.to_sql(
+        output_table,
+        schema="app",
+        con=engine,
+        if_exists="append",
+        chunksize=10000,
+        index=False,
+        method=database.postgres_upsert,
+    )
 
 
 def get_blob_name(

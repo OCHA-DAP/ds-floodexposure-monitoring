@@ -1,6 +1,7 @@
 import os
-from typing import Literal
+from typing import List, Literal
 
+import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import (
     CHAR,
@@ -24,7 +25,7 @@ AZURE_DB_UID = os.getenv("AZURE_DB_UID")
 AZURE_DB_BASE_URL = "postgresql+psycopg2://{uid}:{pw}@{db_name}.postgres.database.azure.com/postgres"  # noqa: E501
 
 
-def get_engine(stage: Literal["dev", "prod"] = "dev"):
+def get_engine(stage: Literal["dev", "prod"]):
     if stage == "dev":
         url = AZURE_DB_BASE_URL.format(
             uid=AZURE_DB_UID, pw=AZURE_DB_PW_DEV, db_name="chd-rasterstats-dev"
@@ -116,3 +117,57 @@ def postgres_upsert(table, conn, keys, data_iter, constraint=None):
     )
     conn.execute(upsert_statement)
     return
+
+
+def get_existing_stats_dates(iso3: str, engine) -> list:
+    """
+    Retrieve list of dates for which flood statistics exist
+    for a given country.
+
+    Parameters
+    ----------
+    iso3 : str
+        Three-letter ISO country code
+    engine : Engine
+        SQLAlchemy database engine
+
+    Returns
+    -------
+    list
+        Dates with existing flood statistics
+    """
+    query = f"""
+    SELECT DISTINCT valid_date
+    FROM app.floodscan_exposure
+    WHERE iso3 = '{iso3.upper()}'
+    ORDER BY valid_date
+    """
+    df_unique_dates = pd.read_sql(query, con=engine)
+    df_unique_dates["valid_date"] = pd.to_datetime(
+        df_unique_dates["valid_date"]
+    )
+    return df_unique_dates["valid_date"].to_list()
+
+
+def get_existing_adm_stats(pcodes: List[str], engine) -> pd.DataFrame:
+    """
+    Fetch flood exposure statistics for specified administrative regions.
+
+    Parameters
+    ----------
+    pcodes : List[str]
+        List of administrative region codes
+    engine : Engine
+        SQLAlchemy database engine
+
+    Returns
+    -------
+    pd.DataFrame
+        Flood exposure statistics for requested regions
+    """
+    query = f"""
+    SELECT *
+    FROM app.floodscan_exposure
+    WHERE pcode IN ({", ".join([f"'{pcode}'" for pcode in pcodes])})
+    """
+    return pd.read_sql(query, con=engine)

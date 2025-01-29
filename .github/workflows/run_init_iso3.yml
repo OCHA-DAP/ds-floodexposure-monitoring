@@ -1,10 +1,12 @@
-name: Update quantiles
+name: Init iso3s
 
 on:
-  repository_dispatch:
-    types:
-      - trigger_compute_quantiles
   workflow_dispatch:
+    inputs:
+        iso3:
+          description: 'Three-letter ISO country code'
+          required: True
+          type: string
 
 jobs:
   run-script:
@@ -29,11 +31,9 @@ jobs:
     - name: Run script
       env:
         DEV_BLOB_SAS: ${{ secrets.DEV_BLOB_SAS }}
-        PROD_BLOB_SAS: ${{ secrets.PROD_BLOB_SAS}}
-        AZURE_DB_PW_DEV: ${{ secrets.AZURE_DB_PW_DEV }}
-        AZURE_DB_PW_PROD: ${{ secrets.AZURE_DB_PW_PROD }}
-        AZURE_DB_UID: ${{ secrets.AZURE_DB_UID_DEV }}
+        PROD_BLOB_SAS: ${{ secrets.PROD_BLOB_SAS }}
         STAGE: ${{ vars.STAGE}}
 
+
       run: |
-        python pipelines/update_exposure_quantile.py
+        python pipelines/init_iso3.py --iso3 ${{ github.event.inputs.iso3 }}
