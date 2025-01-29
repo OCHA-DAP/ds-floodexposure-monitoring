@@ -110,15 +110,23 @@ def upload_gdf_to_blob(gdf, blob_name, stage: Literal["prod", "dev"] = "dev"):
 def load_gdf_from_blob(
     blob_name, shapefile: str = None, stage: Literal["prod", "dev"] = "dev"
 ):
-    blob_data = load_blob_data(blob_name, stage=stage)
-    with zipfile.ZipFile(io.BytesIO(blob_data), "r") as zip_ref:
-        zip_ref.extractall("temp")
-        if shapefile is None:
-            shapefile = [f for f in zip_ref.namelist() if f.endswith(".shp")][
-                0
-            ]
-        gdf = gpd.read_file(f"temp/{shapefile}")
-    return gdf
+    # Create a temporary directory with a unique name
+    temp_dir = tempfile.mkdtemp()
+
+    try:
+        blob_data = load_blob_data(blob_name, stage=stage)
+        with zipfile.ZipFile(io.BytesIO(blob_data), "r") as zip_ref:
+            zip_ref.extractall(temp_dir)
+            if shapefile is None:
+                shapefile = [
+                    f for f in zip_ref.namelist() if f.endswith(".shp")
+                ][0]
+            gdf = gpd.read_file(os.path.join(temp_dir, shapefile))
+        return gdf
+    finally:
+        # Clean up the temporary directory and its contents
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
 
 
 def load_blob_data(
