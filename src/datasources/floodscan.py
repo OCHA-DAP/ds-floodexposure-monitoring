@@ -39,7 +39,7 @@ def calculate_flood_exposure_rasters(
     existing_fs_raw_files = [
         x
         for x in blob.list_container_blobs(
-            name_starts_with=f"{blob.FLOODSCAN_COG_FILEPATH}/aer_area_300s",
+            name_starts_with=blob.FLOODSCAN_COG_FILEPATH,
             container_name="raster",
             stage=STAGE,
         )
