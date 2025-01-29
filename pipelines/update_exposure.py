@@ -3,7 +3,7 @@ from src.datasources import floodscan
 
 if __name__ == "__main__":
 
-    recent = False
+    recent = True
     clobber = False
     verbose = False
 
