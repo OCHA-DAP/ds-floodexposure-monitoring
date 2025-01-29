@@ -36,6 +36,12 @@ commit the changes, and open a new PR
 python pipelines/init_iso3.py --iso3 <new-iso3-code>
 ````
 
+or initialize all available ISO3 codes by running
+
+```shell
+python pipelines/init_iso3.py --iso3 all
+```
+
 ## Structure
 
 ```plaintext
