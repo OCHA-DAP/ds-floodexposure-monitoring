@@ -19,21 +19,25 @@ from sqlalchemy.dialects.postgresql import insert
 
 load_dotenv()
 
-AZURE_DB_PW_DEV = os.getenv("AZURE_DB_PW_DEV")
-AZURE_DB_PW_PROD = os.getenv("AZURE_DB_PW_PROD")
-AZURE_DB_UID = os.getenv("AZURE_DB_UID")
+DSCI_AZ_DB_DEV_PW_WRITE = os.getenv("DSCI_AZ_DB_DEV_PW_WRITE")
+DSCI_AZ_DB_PROD_PW_WRITE = os.getenv("DSCI_AZ_DB_PROD_PW_WRITE")
+DSCI_AZ_DB_DEV_UID_WRITE = os.getenv("DSCI_AZ_DB_DEV_UID_WRITE")
+DSCI_AZ_DB_PROD_UID_WRITE = os.getenv("DSCI_AZ_DB_PROD_UID_WRITE")
+
 AZURE_DB_BASE_URL = "postgresql+psycopg2://{uid}:{pw}@{db_name}.postgres.database.azure.com/postgres"  # noqa: E501
 
 
 def get_engine(stage: Literal["dev", "prod"]):
     if stage == "dev":
         url = AZURE_DB_BASE_URL.format(
-            uid=AZURE_DB_UID, pw=AZURE_DB_PW_DEV, db_name="chd-rasterstats-dev"
+            uid=DSCI_AZ_DB_DEV_UID_WRITE,
+            pw=DSCI_AZ_DB_DEV_PW_WRITE,
+            db_name="chd-rasterstats-dev",
         )
     elif stage == "prod":
         url = AZURE_DB_BASE_URL.format(
-            uid=AZURE_DB_UID,
-            pw=AZURE_DB_PW_PROD,
+            uid=DSCI_AZ_DB_PROD_UID_WRITE,
+            pw=DSCI_AZ_DB_PROD_PW_WRITE,
             db_name="chd-rasterstats-prod",
         )
     else:
