@@ -52,7 +52,7 @@ adm2.plot()
 ```
 
 ```python
-AZURE_DB_PW_DEV = os.getenv("AZURE_DB_PW_DEV")
+DSCI_AZ_DB_DEV_PW_WRITE = os.getenv("DSCI_AZ_DB_DEV_PW_WRITE")
 AZURE_DB_UID = os.getenv("AZURE_DB_UID")
 ```
 
