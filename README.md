@@ -8,8 +8,8 @@ population exposed to flooding for countries in Africa.
 Runs daily on a GH Action, timed to run after the Floodscan data is updated
 by [ds-floodscan-ingest](https://github.com/OCHA-DAP/ds-floodscan-ingest).
 
-To run locally, set the environment variables `DSCI_AZ_BLOB_DEV_SAS`,
-`DSCI_AZ_BLOB_PROD_SAS`, `DSCI_AZ_DB_DEV_PW_WRITE`,
+To run locally, set the environment variables `DSCI_AZ_BLOB_DEV_SAS_WRITE`,
+`DSCI_AZ_BLOB_PROD_SAS_WRITE`, `DSCI_AZ_DB_DEV_PW_WRITE`,
 `DSCI_AZ_DB_PROD_PW_WRITE`, `DSCI_AZ_DB_PROD_UID_WRITE`, `DSCI_AZ_DB_DEV_UID_WRITE`
 and set up a virtual environment and install the requirements:
 

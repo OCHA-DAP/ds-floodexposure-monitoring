@@ -14,8 +14,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DSCI_AZ_BLOB_PROD_SAS = os.getenv("DSCI_AZ_BLOB_PROD_SAS")
-DSCI_AZ_BLOB_DEV_SAS = os.getenv("DSCI_AZ_BLOB_DEV_SAS")
+DSCI_AZ_BLOB_PROD_SAS_WRITE = os.getenv("DSCI_AZ_BLOB_PROD_SAS_WRITE")
+DSCI_AZ_BLOB_DEV_SAS_WRITE = os.getenv("DSCI_AZ_BLOB_DEV_SAS_WRITE")
 
 PROJECT_PREFIX = "ds-floodexposure-monitoring"
 FLOODSCAN_COG_FILEPATH = "floodscan/daily/v5/processed"
@@ -24,7 +24,11 @@ FLOODSCAN_COG_FILEPATH = "floodscan/daily/v5/processed"
 def get_container_client(
     container_name: str = "projects", stage: Literal["prod", "dev"] = "dev"
 ):
-    sas = DSCI_AZ_BLOB_DEV_SAS if stage == "dev" else DSCI_AZ_BLOB_PROD_SAS
+    sas = (
+        DSCI_AZ_BLOB_DEV_SAS_WRITE
+        if stage == "dev"
+        else DSCI_AZ_BLOB_PROD_SAS_WRITE
+    )
     container_url = (
         f"https://imb0chd0{stage}.blob.core.windows.net/"
         f"{container_name}?{sas}"
