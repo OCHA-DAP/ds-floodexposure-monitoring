@@ -269,7 +269,7 @@ def calculate_flood_exposure_rasterstats(
                 if_exists="append",
                 chunksize=10000,
                 index=False,
-                method=database.postgres_upsert,
+                method=ocha.postgres_upsert,
             )
 
 
@@ -296,7 +296,7 @@ def calculate_flood_exposure_rasterstats_regions(
         if_exists="append",
         chunksize=10000,
         index=False,
-        method=database.postgres_upsert,
+        method=ocha.postgres_upsert,
     )
 
 
