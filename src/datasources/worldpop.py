@@ -1,23 +1,18 @@
 from io import BytesIO
 
 import numpy as np
+import ocha_stratus as ocha
 import requests
 import rioxarray as rxr
 
-from src.constants import STAGE
+from src.constants import PROJECT_PREFIX, STAGE, WORLDPOP_BASE_URL
 from src.utils import blob
-
-WORLDPOP_BASE_URL = (
-    "https://data.worldpop.org/GIS/Population/"
-    "Global_2000_2020_1km_UNadj/2020/{iso3_upper}/"
-    "{iso3}_ppp_2020_1km_Aggregated_UNadj.tif"
-)
 
 
 def get_blob_name(iso3: str):
     iso3 = iso3.lower()
     return (
-        f"{blob.PROJECT_PREFIX}/raw/worldpop/"
+        f"{PROJECT_PREFIX}/raw/worldpop/"
         f"{iso3}_ppp_2020_1km_Aggregated_UNadj.tif"
     )
 
@@ -25,8 +20,8 @@ def get_blob_name(iso3: str):
 def download_worldpop_to_blob(iso3: str, clobber: bool = False):
     iso3 = iso3.lower()
     blob_name = get_blob_name(iso3)
-    if not clobber and blob_name in blob.list_container_blobs(
-        name_starts_with=f"{blob.PROJECT_PREFIX}/raw/worldpop/", stage=STAGE
+    if not clobber and blob_name in ocha.list_container_blobs(
+        name_starts_with=f"{PROJECT_PREFIX}/raw/worldpop/", stage=STAGE
     ):
         print(f"{blob_name} already exists in blob storage")
         return
