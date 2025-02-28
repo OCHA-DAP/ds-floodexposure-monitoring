@@ -29,9 +29,10 @@ AZURE_DB_BASE_URL = "postgresql+psycopg2://{uid}:{pw}@{db_name}.postgres.databas
 
 def get_engine(stage: Literal["dev", "prod"]):
     if stage == "dev":
+        print("here!")
         url = AZURE_DB_BASE_URL.format(
-            uid=DSCI_AZ_DB_DEV_UID_WRITE,
-            pw=DSCI_AZ_DB_DEV_PW_WRITE,
+            uid="hannah",
+            pw="mF0hI5iLo7zH",
             db_name="chd-rasterstats-dev",
         )
     elif stage == "prod":
