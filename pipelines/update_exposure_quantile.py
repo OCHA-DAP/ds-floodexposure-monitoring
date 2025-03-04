@@ -1,5 +1,4 @@
 import sys
-from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
@@ -106,18 +105,25 @@ def save_df(df, sel_date, engine, output_table, id_col="pcode"):
 
 
 if __name__ == "__main__":
-    target_date = datetime.today() - timedelta(days=1)
+
+    table_name = "floodscan_exposure"
     engine = database.get_engine(stage=STAGE)
 
-    print(f"Computing quantiles as of {target_date.strftime('%Y-%m-%d')}")
-    print(f"Using {ROLL_WINDOW}-day rolling average")
-
-    # Get data and calculate rolling averages
     try:
         with engine.connect() as con:
-            print("Calculating rolling averages and getting data from db...")
+            # We're assuming this date is the same in the `regions` table
+            result = con.execute(
+                text(f"SELECT MAX(valid_date) FROM app.{table_name}")
+            )
+            target_date = result.fetchone()[0]
+
+            print(
+                f"Computing quantiles as of {target_date.strftime('%Y-%m-%d')}"
+            )
+            print(f"Using {ROLL_WINDOW}-day rolling average")
+
             df_standard = pd.read_sql_query(
-                rolling_query("floodscan_exposure"),
+                rolling_query(table_name),
                 con,
                 params={"month": target_date.month, "day": target_date.day},
             )
