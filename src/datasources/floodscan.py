@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-import ocha_stratus as ocha
+import ocha_stratus as stratus
 import pandas as pd
 import xarray as xr
 from sqlalchemy.engine import Engine
@@ -39,7 +39,7 @@ def calculate_flood_exposure_rasters(
     # check for existing raw Floodscan rasters
     existing_fs_raw_files = [
         x
-        for x in ocha.list_container_blobs(
+        for x in stratus.list_container_blobs(
             name_starts_with=FLOODSCAN_COG_FILEPATH,
             container_name="raster",
             stage=STAGE,
@@ -58,7 +58,7 @@ def calculate_flood_exposure_rasters(
         fs_raw_files = existing_fs_raw_files
 
     # check for existing processed exposure rasters
-    existing_exposure_files = ocha.list_container_blobs(
+    existing_exposure_files = stratus.list_container_blobs(
         name_starts_with=f"{PROJECT_PREFIX}/processed/flood_exposure/"
         f"{iso3}",
         stage=STAGE,
@@ -78,7 +78,7 @@ def calculate_flood_exposure_rasters(
             if verbose:
                 print(f"already processed for {date_str}, skipping")
             continue
-        da_in = ocha.open_blob_cog(
+        da_in = stratus.open_blob_cog(
             blob_name, container_name="raster", stage=STAGE
         )
         long_name = da_in.attrs["long_name"]
@@ -106,7 +106,7 @@ def calculate_flood_exposure_rasters(
     # interpolate to Worldpop grid and
     # multiply by population to get exposure
     exposure = ds_recent_filtered.interp_like(pop, method="nearest") * pop
-    existing_exposure_files = ocha.list_container_blobs(
+    existing_exposure_files = stratus.list_container_blobs(
         name_starts_with=f"{PROJECT_PREFIX}/processed/flood_exposure/"
         f"{iso3}",
         stage=STAGE,
@@ -122,7 +122,7 @@ def calculate_flood_exposure_rasters(
             continue
         if verbose:
             print(f"uploading {blob_name}")
-        ocha.upload_cog_to_blob(
+        stratus.upload_cog_to_blob(
             blob_name, exposure.sel(date=date), stage=STAGE
         )
 
@@ -163,7 +163,7 @@ def calculate_flood_exposure_rasterstats(
     adm = codab.load_codab_from_blob(iso3, admin_level=2)
     existing_exposure_rasters = [
         x
-        for x in ocha.list_container_blobs(
+        for x in stratus.list_container_blobs(
             name_starts_with=f"{PROJECT_PREFIX}/processed/"
             f"flood_exposure/{iso3}/",
             stage=STAGE,
@@ -196,7 +196,7 @@ def calculate_flood_exposure_rasterstats(
                 blob_name.split("/")[-1][13:23], "%Y-%m-%d"
             )
             try:
-                da_in = ocha.open_blob_cog(blob_name, stage=STAGE)
+                da_in = stratus.open_blob_cog(blob_name, stage=STAGE)
                 da_in["date"] = date_in
                 da_in = da_in.persist()
                 das.append(da_in)
@@ -269,7 +269,7 @@ def calculate_flood_exposure_rasterstats(
                 if_exists="append",
                 chunksize=10000,
                 index=False,
-                method=ocha.postgres_upsert,
+                method=stratus.postgres_upsert,
             )
 
 
@@ -296,7 +296,7 @@ def calculate_flood_exposure_rasterstats_regions(
         if_exists="append",
         chunksize=10000,
         index=False,
-        method=ocha.postgres_upsert,
+        method=stratus.postgres_upsert,
     )
 
 

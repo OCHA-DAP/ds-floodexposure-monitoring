@@ -2,7 +2,7 @@ import sys
 from datetime import datetime, timedelta
 
 import numpy as np
-import ocha_stratus as ocha
+import ocha_stratus as stratus
 import pandas as pd
 from sqlalchemy import text
 
@@ -107,7 +107,7 @@ def save_df(df, sel_date, engine, output_table, id_col="pcode"):
 
 if __name__ == "__main__":
     target_date = datetime.today() - timedelta(days=1)
-    engine = ocha.get_engine(stage=STAGE)
+    engine = stratus.get_engine(stage=STAGE)
 
     print(f"Computing quantiles as of {target_date.strftime('%Y-%m-%d')}")
     print(f"Using {ROLL_WINDOW}-day rolling average")

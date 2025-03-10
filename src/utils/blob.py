@@ -1,6 +1,6 @@
 from typing import Literal
 
-import ocha_stratus as ocha
+import ocha_stratus as stratus
 from azure.storage.blob import ContentSettings
 
 
@@ -9,7 +9,7 @@ def load_blob_data(
     stage: Literal["prod", "dev"] = "dev",
     container_name: str = "projects",
 ):
-    container_client = ocha.get_container_client(
+    container_client = stratus.get_container_client(
         stage=stage, container_name=container_name
     )
     blob_client = container_client.get_blob_client(blob_name)
@@ -24,7 +24,7 @@ def upload_blob_data(
     container_name: str = "projects",
     content_type: str = None,
 ):
-    container_client = ocha.get_container_client(
+    container_client = stratus.get_container_client(
         stage=stage, container_name=container_name
     )
 

@@ -1,7 +1,7 @@
 from io import BytesIO
 
 import numpy as np
-import ocha_stratus as ocha
+import ocha_stratus as stratus
 import requests
 import rioxarray as rxr
 
@@ -20,7 +20,7 @@ def get_blob_name(iso3: str):
 def download_worldpop_to_blob(iso3: str, clobber: bool = False):
     iso3 = iso3.lower()
     blob_name = get_blob_name(iso3)
-    if not clobber and blob_name in ocha.list_container_blobs(
+    if not clobber and blob_name in stratus.list_container_blobs(
         name_starts_with=f"{PROJECT_PREFIX}/raw/worldpop/", stage=STAGE
     ):
         print(f"{blob_name} already exists in blob storage")

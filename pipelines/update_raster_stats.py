@@ -1,4 +1,4 @@
-import ocha_stratus as ocha
+import ocha_stratus as stratus
 
 from src.constants import ISO3S, REGIONS, STAGE
 from src.datasources import floodscan
@@ -8,7 +8,7 @@ if __name__ == "__main__":
 
     clobber = False
     verbose = False
-    engine = ocha.get_engine(stage=STAGE)
+    engine = stratus.get_engine(stage=STAGE)
     table_name = "floodscan_exposure"
     table_name_regions = "floodscan_exposure_regions"
 
