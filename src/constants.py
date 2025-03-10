@@ -21,6 +21,16 @@ ISO3S = [
 ]
 CHD_GREEN = "#1bb580"
 
+PROJECT_PREFIX = "ds-floodexposure-monitoring"
+FLOODSCAN_COG_FILEPATH = "floodscan/daily/v5/processed"
+FIELDMAPS_BASE_URL = "https://data.fieldmaps.io/cod/originals/{iso3}.shp.zip"
+
+WORLDPOP_BASE_URL = (
+    "https://data.worldpop.org/GIS/Population/"
+    "Global_2000_2020_1km_UNadj/2020/{iso3_upper}/"
+    "{iso3}_ppp_2020_1km_Aggregated_UNadj.tif"
+)
+
 # specific pcodes for building regions
 NORDKIVU1 = "CD61"
 SUDKIVU1 = "CD62"
