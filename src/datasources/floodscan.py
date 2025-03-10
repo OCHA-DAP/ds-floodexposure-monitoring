@@ -16,6 +16,7 @@ def calculate_flood_exposure_rasters(
     clobber: bool = False,
     recent: bool = True,
     verbose: bool = False,
+    batch_size: int = 100,
 ):
     """
     Calculate flood exposure rasters for a given country.
@@ -30,6 +31,8 @@ def calculate_flood_exposure_rasters(
         Whether to look only for data from the current year
     verbose: bool
         Whether to print progress of specific dates
+    batch_size: int
+        Maximum number of files to process in a single batch (default: 100)
 
     Returns
     -------
@@ -63,9 +66,34 @@ def calculate_flood_exposure_rasters(
         stage=STAGE,
     )
 
-    # stack up relevant raw Floodscan rasters
+    # Split files into batches of size batch_size
+    total_files = len(fs_raw_files)
+    if verbose:
+        print(f"Total files to process: {total_files}")
+
+    for batch_start in range(0, total_files, batch_size):
+        batch_end = min(batch_start + batch_size, total_files)
+        current_batch = fs_raw_files[batch_start:batch_end]
+
+        if verbose:
+            print(
+                f"""Processing batch {batch_start//batch_size + 1},
+                files {batch_start+1}-{batch_end} of {total_files}"""
+            )
+
+        # Process current batch
+        process_batch_flood_exposure(
+            current_batch, pop, iso3, existing_exposure_files, clobber, verbose
+        )
+
+
+def process_batch_flood_exposure(
+    file_batch, pop, iso3, existing_exposure_files, clobber, verbose
+):
+    """Process a batch of files"""
+    # stack up relevant raw Floodscan rasters for this batch
     das = []
-    for blob_name in tqdm(fs_raw_files):
+    for blob_name in tqdm(file_batch):
         date_in = datetime.strptime(
             blob_name.split("/")[-1][15:25], "%Y-%m-%d"
         )
@@ -97,7 +125,7 @@ def calculate_flood_exposure_rasters(
 
     if not das:
         if verbose:
-            print("no new floodscan data to process")
+            print("no new floodscan data to process in this batch")
         return
     ds_recent = xr.concat(das, dim="date")
     # filter to only pixels with flood extent > 5% to reduce noise
@@ -105,11 +133,6 @@ def calculate_flood_exposure_rasters(
     # interpolate to Worldpop grid and
     # multiply by population to get exposure
     exposure = ds_recent_filtered.interp_like(pop, method="nearest") * pop
-    existing_exposure_files = blob.list_container_blobs(
-        name_starts_with=f"{blob.PROJECT_PREFIX}/processed/flood_exposure/"
-        f"{iso3}",
-        stage=STAGE,
-    )
 
     # iterate over dates and upload COGs to blob storage
     for date in tqdm(exposure.date):
