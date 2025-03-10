@@ -1,14 +1,15 @@
 from datetime import datetime
 from typing import Literal
 
+import ocha_stratus as stratus
 import pandas as pd
 import xarray as xr
 from sqlalchemy.engine import Engine
 from tqdm.auto import tqdm
 
-from src.constants import STAGE
+from src.constants import FLOODSCAN_COG_FILEPATH, PROJECT_PREFIX, STAGE
 from src.datasources import codab, worldpop
-from src.utils import blob, database
+from src.utils import database
 
 
 def calculate_flood_exposure_rasters(
@@ -41,8 +42,8 @@ def calculate_flood_exposure_rasters(
     # check for existing raw Floodscan rasters
     existing_fs_raw_files = [
         x
-        for x in blob.list_container_blobs(
-            name_starts_with=blob.FLOODSCAN_COG_FILEPATH,
+        for x in stratus.list_container_blobs(
+            name_starts_with=FLOODSCAN_COG_FILEPATH,
             container_name="raster",
             stage=STAGE,
         )
@@ -60,8 +61,8 @@ def calculate_flood_exposure_rasters(
         fs_raw_files = existing_fs_raw_files
 
     # check for existing processed exposure rasters
-    existing_exposure_files = blob.list_container_blobs(
-        name_starts_with=f"{blob.PROJECT_PREFIX}/processed/flood_exposure/"
+    existing_exposure_files = stratus.list_container_blobs(
+        name_starts_with=f"{PROJECT_PREFIX}/processed/flood_exposure/"
         f"{iso3}",
         stage=STAGE,
     )
@@ -104,7 +105,7 @@ def process_batch_flood_exposure(
             if verbose:
                 print(f"already processed for {date_str}, skipping")
             continue
-        da_in = blob.open_blob_cog(
+        da_in = stratus.open_blob_cog(
             blob_name, container_name="raster", stage=STAGE
         )
         long_name = da_in.attrs["long_name"]
@@ -143,7 +144,7 @@ def process_batch_flood_exposure(
             continue
         if verbose:
             print(f"uploading {blob_name}")
-        blob.upload_cog_to_blob(
+        stratus.upload_cog_to_blob(
             blob_name, exposure.sel(date=date), stage=STAGE
         )
 
@@ -184,8 +185,8 @@ def calculate_flood_exposure_rasterstats(
     adm = codab.load_codab_from_blob(iso3, admin_level=2)
     existing_exposure_rasters = [
         x
-        for x in blob.list_container_blobs(
-            name_starts_with=f"{blob.PROJECT_PREFIX}/processed/"
+        for x in stratus.list_container_blobs(
+            name_starts_with=f"{PROJECT_PREFIX}/processed/"
             f"flood_exposure/{iso3}/",
             stage=STAGE,
         )
@@ -217,7 +218,7 @@ def calculate_flood_exposure_rasterstats(
                 blob_name.split("/")[-1][13:23], "%Y-%m-%d"
             )
             try:
-                da_in = blob.open_blob_cog(blob_name, stage=STAGE)
+                da_in = stratus.open_blob_cog(blob_name, stage=STAGE)
                 da_in["date"] = date_in
                 da_in = da_in.persist()
                 das.append(da_in)
@@ -288,7 +289,7 @@ def calculate_flood_exposure_rasterstats(
                 if_exists="append",
                 chunksize=10000,
                 index=False,
-                method=database.postgres_upsert,
+                method=stratus.postgres_upsert,
             )
 
 
@@ -315,7 +316,7 @@ def calculate_flood_exposure_rasterstats_regions(
         if_exists="append",
         chunksize=10000,
         index=False,
-        method=database.postgres_upsert,
+        method=stratus.postgres_upsert,
     )
 
 
@@ -346,16 +347,16 @@ def get_blob_name(
         if date is None:
             raise ValueError("date must be provided for exposure data")
         return (
-            f"{blob.PROJECT_PREFIX}/processed/flood_exposure/"
+            f"{PROJECT_PREFIX}/processed/flood_exposure/"
             f"{iso3}/{iso3}_exposure_{date}.tif"
         )
     elif data_type == "exposure_tabular":
         return (
-            f"{blob.PROJECT_PREFIX}/processed/flood_exposure/tabular/"
+            f"{PROJECT_PREFIX}/processed/flood_exposure/tabular/"
             f"{iso3}_adm_flood_exposure.parquet"
         )
     elif data_type == "flood_extent":
         return (
-            f"{blob.PROJECT_PREFIX}/processed/flood_extent/"
+            f"{PROJECT_PREFIX}/processed/flood_extent/"
             f"{iso3}_flood_extent.tif"
         )

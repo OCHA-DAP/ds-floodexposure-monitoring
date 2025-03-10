@@ -1,11 +1,11 @@
 import sys
 
 import numpy as np
+import ocha_stratus as stratus
 import pandas as pd
 from sqlalchemy import text
 
 from src.constants import STAGE
-from src.utils import database
 
 ROLL_WINDOW = 7
 
@@ -105,9 +105,8 @@ def save_df(df, sel_date, engine, output_table, id_col="pcode"):
 
 
 if __name__ == "__main__":
-
     table_name = "floodscan_exposure"
-    engine = database.get_engine(stage=STAGE)
+    engine = stratus.get_engine(stage=STAGE)
 
     try:
         with engine.connect() as con:
