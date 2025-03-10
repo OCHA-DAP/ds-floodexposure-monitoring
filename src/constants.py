@@ -6,7 +6,19 @@ load_dotenv()
 
 STAGE = os.getenv("STAGE")
 
-ISO3S = ["ner", "nga", "cmr", "tcd", "bfa", "eth", "som", "ssd", "mli", "cod"]
+ISO3S = [
+    "ner",
+    "nga",
+    "cmr",
+    "tcd",
+    "bfa",
+    "eth",
+    "som",
+    "ssd",
+    "mli",
+    "cod",
+    "moz",
+]
 CHD_GREEN = "#1bb580"
 
 PROJECT_PREFIX = "ds-floodexposure-monitoring"
