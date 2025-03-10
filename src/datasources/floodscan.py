@@ -70,7 +70,7 @@ def calculate_flood_exposure_rasters(
     total_files = len(fs_raw_files)
     print(f"Total files to process: {total_files}")
 
-    for batch_start in range(0, total_files, batch_size):
+    for batch_start in tqdm(range(0, total_files, batch_size)):
         batch_end = min(batch_start + batch_size, total_files)
         current_batch = fs_raw_files[batch_start:batch_end]
 
@@ -92,7 +92,7 @@ def process_batch_flood_exposure(
     """Process a batch of files"""
     # stack up relevant raw Floodscan rasters for this batch
     das = []
-    for blob_name in tqdm(file_batch):
+    for blob_name in file_batch:
         date_in = datetime.strptime(
             blob_name.split("/")[-1][15:25], "%Y-%m-%d"
         )
