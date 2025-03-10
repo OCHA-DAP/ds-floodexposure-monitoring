@@ -134,7 +134,7 @@ def process_batch_flood_exposure(
     exposure = ds_recent_filtered.interp_like(pop, method="nearest") * pop
 
     # iterate over dates and upload COGs to blob storage
-    for date in tqdm(exposure.date):
+    for date in exposure.date:
         date_str = str(date.values.astype("datetime64[D]"))
         blob_name = get_blob_name(iso3, "exposure_raster", date=date_str)
         if blob_name in existing_exposure_files and not clobber:
