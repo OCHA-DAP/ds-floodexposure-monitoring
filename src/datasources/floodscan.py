@@ -212,7 +212,7 @@ def calculate_flood_exposure_rasterstats(
     for exposure_raster_chunk in tqdm(exposure_raster_chunks):
         # stack up exposure rasters in chunk
         das = []
-        for blob_name in tqdm(exposure_raster_chunk):
+        for blob_name in exposure_raster_chunk:
             date_in = datetime.strptime(
                 blob_name.split("/")[-1][13:23], "%Y-%m-%d"
             )
@@ -236,9 +236,7 @@ def calculate_flood_exposure_rasterstats(
 
         # iterate over admin level 2 regions and calculate exposure sums
         dfs = []
-        for pcode, row in tqdm(
-            adm.set_index("ADM2_PCODE").iterrows(), total=len(adm)
-        ):
+        for pcode, row in adm.set_index("ADM2_PCODE").iterrows():
             da_clip = ds_exp_recent.rio.clip([row.geometry])
             dff = (
                 da_clip.sum(dim=["x", "y"])
