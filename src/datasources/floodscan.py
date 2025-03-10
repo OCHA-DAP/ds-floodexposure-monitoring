@@ -68,8 +68,7 @@ def calculate_flood_exposure_rasters(
 
     # Split files into batches of size batch_size
     total_files = len(fs_raw_files)
-    if verbose:
-        print(f"Total files to process: {total_files}")
+    print(f"Total files to process: {total_files}")
 
     for batch_start in range(0, total_files, batch_size):
         batch_end = min(batch_start + batch_size, total_files)
