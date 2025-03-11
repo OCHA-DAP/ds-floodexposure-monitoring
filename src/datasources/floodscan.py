@@ -145,7 +145,7 @@ def process_batch_flood_exposure(
         if verbose:
             print(f"uploading {blob_name}")
         stratus.upload_cog_to_blob(
-            blob_name, exposure.sel(date=date), stage=STAGE
+            exposure.sel(date=date), blob_name, stage=STAGE
         )
 
 
