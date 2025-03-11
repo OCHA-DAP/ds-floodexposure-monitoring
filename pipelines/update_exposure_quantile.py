@@ -135,7 +135,7 @@ if __name__ == "__main__":
         print(f"Error querying database: {e}")
         sys.exit(1)
 
-    save_df(df_standard, target_date, engine, "current_quantile")
-    save_df(df_region, target_date, engine, "current_quantile_regions")
+    save_df(df_standard, target_date, engine, "quantile")
+    save_df(df_region, target_date, engine, "quantile_regions")
 
     print("Done!")
