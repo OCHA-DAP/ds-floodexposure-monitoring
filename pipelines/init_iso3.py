@@ -10,13 +10,10 @@ if __name__ == "__main__":
     input_iso3 = args.iso3
 
     # Confirm that the input ISO3 code is in the ISO3s list
-    if input_iso3 not in ISO3S:
+    if input_iso3 != "all" and input_iso3 not in ISO3S:
         raise ValueError(
             f"{input_iso3} not in ISO3S list. Please make sure to add."
         )
-
-    # Update the `admin_lookup` table for all ISO3s
-    codab.load_geo_data(ISO3S, REGIONS, save_to_database=True)
 
     # Now initialize the data for the input ISO3
     if input_iso3 == "all":
@@ -30,5 +27,9 @@ if __name__ == "__main__":
         codab.download_codab_to_blob(iso3)
         worldpop.download_worldpop_to_blob(iso3)
         floodscan.calculate_flood_exposure_rasters(iso3=iso3, recent=False)
+
+    # Update the `admin_lookup` table for all ISO3s
+    print("Updating all admin references")
+    codab.load_geo_data(ISO3S, REGIONS, save_to_database=True)
 
     print("Done!")
