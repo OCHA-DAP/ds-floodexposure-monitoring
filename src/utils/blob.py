@@ -25,7 +25,7 @@ def upload_blob_data(
     content_type: str = None,
 ):
     container_client = stratus.get_container_client(
-        stage=stage, container_name=container_name
+        stage=stage, container_name=container_name, write=True
     )
 
     if content_type is None:
