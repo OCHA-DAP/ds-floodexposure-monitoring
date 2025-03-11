@@ -289,7 +289,7 @@ def calculate_flood_exposure_rasterstats(
                 if_exists="append",
                 chunksize=10000,
                 index=False,
-                method=stratus.postgres_upsert,
+                method=database.postgres_upsert,
             )
 
 
@@ -316,7 +316,7 @@ def calculate_flood_exposure_rasterstats_regions(
         if_exists="append",
         chunksize=10000,
         index=False,
-        method=stratus.postgres_upsert,
+        method=database.postgres_upsert,
     )
 
 
