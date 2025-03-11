@@ -8,7 +8,7 @@ if __name__ == "__main__":
 
     clobber = False
     verbose = False
-    engine = stratus.get_engine(stage=STAGE)
+    engine = stratus.get_engine(stage=STAGE, write=True)
     table_name = "floodscan_exposure"
     table_name_regions = "floodscan_exposure_regions"
 

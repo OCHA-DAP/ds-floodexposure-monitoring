@@ -106,7 +106,7 @@ def save_df(df, sel_date, engine, output_table, id_col="pcode"):
 
 if __name__ == "__main__":
     table_name = "floodscan_exposure"
-    engine = stratus.get_engine(stage=STAGE)
+    engine = stratus.get_engine(stage=STAGE, write=True)
 
     try:
         with engine.connect() as con:
