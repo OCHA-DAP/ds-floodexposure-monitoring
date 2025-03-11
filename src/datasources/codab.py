@@ -23,7 +23,7 @@ def download_codab_to_blob(iso3: str, clobber: bool = False):
     response.raise_for_status()
 
     # Should eventually get this from ocha-stratus
-    blob._upload_blob_data(blob_name, response.content, stage=STAGE)
+    blob.upload_blob_data(blob_name, response.content, stage=STAGE)
 
 
 def load_codab_from_blob(iso3: str, admin_level: int = 0):
