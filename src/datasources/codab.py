@@ -16,8 +16,10 @@ def load_geo_data(iso3s, regions, save_to_database=True):
     adm = pd.concat(adms, ignore_index=True)
 
     for adm_level in range(3):
-        adm[f"ADM{adm_level}_NAME"] = adm[f"ADM{adm_level}_FR"].fillna(
-            adm[f"ADM{adm_level}_EN"]
+        adm[f"ADM{adm_level}_NAME"] = (
+            adm[f"ADM{adm_level}_FR"]
+            .fillna(adm[f"ADM{adm_level}_EN"])
+            .fillna(adm[f"ADM{adm_level}_PT"])
         )
     adm.drop(columns=["geometry"], inplace=True)
     adm.columns = adm.columns.str.lower()
