@@ -18,6 +18,7 @@ ISO3S = [
     "mli",
     "cod",
     "moz",
+    "mwi",
 ]
 CHD_GREEN = "#1bb580"
 

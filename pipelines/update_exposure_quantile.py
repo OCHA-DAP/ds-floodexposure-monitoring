@@ -106,7 +106,7 @@ def save_df(df, sel_date, engine, output_table, id_col="pcode"):
 
 if __name__ == "__main__":
     table_name = "floodscan_exposure"
-    engine = stratus.get_engine(stage=STAGE)
+    engine = stratus.get_engine(stage=STAGE, write=True)
 
     try:
         with engine.connect() as con:
@@ -135,7 +135,7 @@ if __name__ == "__main__":
         print(f"Error querying database: {e}")
         sys.exit(1)
 
-    save_df(df_standard, target_date, engine, "current_quantile")
-    save_df(df_region, target_date, engine, "current_quantile_regions")
+    save_df(df_standard, target_date, engine, "quantile")
+    save_df(df_region, target_date, engine, "quantile_regions")
 
     print("Done!")
