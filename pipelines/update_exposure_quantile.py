@@ -1,3 +1,4 @@
+import os
 import sys
 
 import numpy as np
@@ -7,7 +8,7 @@ from sqlalchemy import text
 
 from src.constants import STAGE
 
-ROLL_WINDOW = 7
+ROLL_WINDOW = int(os.getenv("ROLL_WINDOW", 7))
 
 
 def rolling_query(table_name):

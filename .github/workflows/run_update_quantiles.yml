@@ -37,6 +37,7 @@ jobs:
         DSCI_AZ_DB_DEV_HOST: ${{ secrets.DSCI_AZ_DB_DEV_HOST}}
         DSCI_AZ_DB_PROD_HOST: ${{ secrets.DSCI_AZ_DB_PROD_HOST}}
         STAGE: ${{ vars.STAGE}}
+        ROLL_WINDOW: ${{ vars.ROLL_WINDOW }}
 
       run: |
         python pipelines/update_exposure_quantile.py
