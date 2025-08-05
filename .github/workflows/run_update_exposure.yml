@@ -3,7 +3,7 @@ name: Update exposure rasters
 on:
   workflow_dispatch:
   schedule:
-      - cron: "5 23 * * *" # 23:05 UTC, 5 minutes after ds-floodscan-ingest runs
+      - cron: "15 23 * * *" # 23:15 UTC, 15 minutes after ds-floodscan-ingest runs
 
 jobs:
   run-script:
