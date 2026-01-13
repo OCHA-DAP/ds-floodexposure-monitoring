@@ -88,7 +88,14 @@ def calculate_flood_exposure_rasters(
 
 
 def process_batch_flood_exposure(
-    file_batch, pop, iso3, existing_exposure_files, clobber, verbose
+    file_batch,
+    pop,
+    iso3,
+    existing_exposure_files,
+    clobber,
+    verbose,
+    read_stage: str = STAGE,
+    write_stage: str = STAGE,
 ):
     """Process a batch of files"""
     # stack up relevant raw Floodscan rasters for this batch
@@ -106,7 +113,7 @@ def process_batch_flood_exposure(
                 print(f"already processed for {date_str}, skipping")
             continue
         da_in = stratus.open_blob_cog(
-            blob_name, container_name="raster", stage=STAGE
+            blob_name, container_name="raster", stage=read_stage
         )
         long_name = da_in.attrs["long_name"]
         if long_name == ("SFED", "MFED"):
@@ -145,7 +152,7 @@ def process_batch_flood_exposure(
         if verbose:
             print(f"uploading {blob_name}")
         stratus.upload_cog_to_blob(
-            exposure.sel(date=date), blob_name, stage=STAGE
+            exposure.sel(date=date), blob_name, stage=write_stage
         )
 
 
