@@ -20,6 +20,7 @@ ISO3S = [
     "moz",
     "mwi",
     "mdg",
+    "sdn",
 ]
 CHD_GREEN = "#1bb580"
 
