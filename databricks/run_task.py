@@ -60,14 +60,16 @@ def _parse(argv):
         metavar="KEY=VALUE",
         help="extra env var for the script (repeatable)",
     )
-    ap.add_argument(
-        "script_args",
-        nargs=argparse.REMAINDER,
-        help="arguments passed through to the script (after --)",
-    )
+    ap.epilog = "Everything after a literal `--` is passed through to the script."
+    # Split on the first literal "--" ourselves: an argparse REMAINDER
+    # positional would swallow --stage/--env as soon as it sees the script.
+    if "--" in argv:
+        i = argv.index("--")
+        argv, script_args = argv[:i], argv[i + 1 :]
+    else:
+        script_args = []
     args = ap.parse_args(argv)
-    if args.script_args and args.script_args[0] == "--":
-        args.script_args = args.script_args[1:]
+    args.script_args = script_args
     return args
 
 
