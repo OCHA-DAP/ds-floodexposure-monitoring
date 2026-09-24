@@ -1,9 +1,12 @@
 name: Update exposure rasters
 
+# Manual fallback only. The daily chain (exposure rasters → raster stats →
+# quantiles) runs as the Databricks job "Flood Exposure Monitoring" defined in
+# databricks.yml (23:15 UTC, after the FloodScan COGs land); GitHub Actions
+# runners are losing network access to the Postgres DB. Dispatching this
+# workflow still runs the full chain via repository_dispatch.
 on:
   workflow_dispatch:
-  schedule:
-      - cron: "15 23 * * *" # 23:15 UTC, 15 minutes after ds-floodscan-ingest runs
 
 jobs:
   run-script:

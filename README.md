@@ -5,8 +5,23 @@ population exposed to flooding for countries in Africa.
 
 ## Usage
 
-Runs daily on a GH Action, timed to run after the Floodscan data is updated
-by [ds-floodscan-ingest](https://github.com/OCHA-DAP/ds-floodscan-ingest).
+Runs daily as the Databricks job **Flood Exposure Monitoring** (23:15 UTC,
+after the FloodScan COGs are updated by
+[ds-raster-pipelines](https://github.com/OCHA-DAP/ds-raster-pipelines)),
+defined in `databricks.yml` — one job with three chained tasks:
+exposure rasters → raster stats → quantiles. `STAGE` (the ocha-stratus data
+plane) is a bundle variable: the `prod` target sets `prod`, the `dev` target
+`dev`.
+
+```shell
+databricks bundle validate -t prod -p DEFAULT
+databricks bundle deploy   -t prod -p DEFAULT        # (re)deploy the live job
+databricks bundle run flood_exposure_monitoring -t prod -p DEFAULT
+databricks bundle run init_iso3 -t prod -p DEFAULT --params iso3=<new-iso3-code>
+```
+
+The GitHub Actions workflows remain as a manual fallback
+(`workflow_dispatch` on "Update exposure rasters" runs the whole chain).
 
 To run locally, set the environment variables `DSCI_AZ_BLOB_DEV_SAS_WRITE`,
 `DSCI_AZ_BLOB_PROD_SAS_WRITE`, `DSCI_AZ_DB_DEV_PW_WRITE`,

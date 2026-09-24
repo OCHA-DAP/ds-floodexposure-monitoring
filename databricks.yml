@@ -1,0 +1,219 @@
+# Databricks Asset Bundle — ds-floodexposure-monitoring
+#
+# Two jobs:
+#
+#   • flood_exposure_monitoring — the daily chain, one job with three chained
+#     tasks (replaces the three GitHub Actions workflows that were linked by
+#     repository_dispatch):
+#         update_exposure      pipelines/update_exposure.py          blob only
+#         update_raster_stats  pipelines/update_raster_stats.py      → app.floodscan_exposure(_regions)
+#         update_quantiles     pipelines/update_exposure_quantile.py → app.quantile(_regions), app.current_quantile(_regions)
+#     Scheduled 23:15 UTC daily, 15 min after the FloodScan COGs land
+#     (ds-raster-pipelines "Run FloodScan").
+#   • init_iso3 — manual: download CODAB + WorldPop, compute the full exposure
+#     raster history for one ISO3 (or "all") and refresh app.admin_lookup.
+#
+# Every task runs the unchanged pure-Python pipeline script through the thin
+# wrapper databricks/run_task.py, which sets STAGE (the ocha-stratus data
+# plane: DEV vs PROD DB + blob) and copies src/ + pipelines/ onto local disk
+# before importing. Credentials are not in this file: the Job Compute policy
+# injects DSCI_AZ_* from the `dsci` secret scope.
+#
+# The two dev/prod axes (KB infrastructure/databricks.md): the bundle TARGET
+# says where the job runs (dev = paused, "[dev <user>]"-prefixed; prod = the
+# live schedule), the STAGE variable says which data plane it touches. The
+# prod target sets stage=prod; the dev target leaves it at dev.
+#
+#   databricks bundle validate -t dev  -p DEFAULT
+#   databricks bundle deploy   -t dev  -p DEFAULT --var git_branch=my-branch   # feature test (paused)
+#   databricks bundle run flood_exposure_monitoring -t dev -p DEFAULT          # manual dev-plane run
+#   databricks bundle destroy  -t dev  -p DEFAULT                              # tear the dev copy down
+#   databricks bundle deploy   -t prod -p DEFAULT                              # the live job
+#   databricks bundle run init_iso3 -t prod -p DEFAULT --params iso3=mdg
+#
+# Code changes ship by pushing the branch (source: GIT); `bundle deploy` is
+# only needed when the job config (schedule, params, libraries, cluster)
+# changes.
+
+bundle:
+  name: ds-floodexposure-monitoring
+
+variables:
+  git_branch:
+    description: Repo branch the jobs pull the pipeline code from
+    default: main
+  stage:
+    description: ocha-stratus data plane the pipeline reads/writes (dev | prod)
+    default: dev
+  roll_window:
+    description: Rolling-mean window (days) for the quantile calculation (GHA repo var ROLL_WINDOW)
+    default: "3"
+
+.git_source: &git_source
+  git_url: https://github.com/OCHA-DAP/ds-floodexposure-monitoring.git
+  git_provider: gitHub
+  git_branch: ${var.git_branch}
+
+# Job Compute policy (000C79D951EAF0D6): ephemeral single-worker cluster that
+# injects DSCI_AZ_DB_*/DSCI_AZ_BLOB_* (dev + prod) from the dsci secret scope.
+.cluster_spec: &cluster_spec
+  policy_id: "000C79D951EAF0D6"
+  apply_policy_default_values: true
+  num_workers: 1
+
+# Pinned to requirements.txt where the repo pins. numpy/pandas are left to the
+# Databricks runtime to avoid fighting its core scientific stack.
+.libs: &libs
+  - pypi: { package: "ocha-stratus==0.1.2" }
+  - pypi: { package: "azure-storage-blob==12.22.0" }
+  - pypi: { package: "geopandas==1.0.1" }
+  - pypi: { package: "xarray==2024.7.0" }
+  # rioxarray/rasterio pinned to what the GHA runner resolved (rasterio 1.5 on
+  # the cluster reads the FloodScan COG band descriptions into a long_name
+  # list that rioxarray then refuses to write back: "Number of names in the
+  # 'long_name' attribute does not equal the number of bands").
+  - pypi: { package: "rioxarray==0.19.0" }
+  - pypi: { package: "rasterio==1.4.4" }
+  - pypi: { package: "dask>2024.8.0" }
+  - pypi: { package: "scipy" }
+  - pypi: { package: "pyarrow" }
+  - pypi: { package: "matplotlib==3.9.2" }
+  - pypi: { package: "plotly==5.23.0" }
+  - pypi: { package: "tqdm==4.66.5" }
+  - pypi: { package: "python-dotenv==1.0.1" }
+  - pypi: { package: "sqlalchemy==2.0.36" }
+  - pypi: { package: "psycopg2-binary==2.9.10" }
+
+resources:
+  jobs:
+
+    flood_exposure_monitoring:
+      name: Flood Exposure Monitoring
+      description: >
+        Daily FloodScan × WorldPop population-exposure chain: exposure rasters
+        (blob) → admin raster stats (app.floodscan_exposure) → rolling
+        quantiles (app.quantile / app.current_quantile). Consumed by the flood
+        exposure app and the Nigeria flash-flood AA monitor.
+      git_source: *git_source
+      tags:
+        databricks: job
+        output_schema: app
+
+      permissions:
+        - group_name: dsci
+          level: CAN_MANAGE
+
+      schedule:
+        # 23:15 UTC daily. No explicit pause_status: the prod target runs it,
+        # the dev target (development mode) auto-pauses it.
+        quartz_cron_expression: "0 15 23 * * ?"
+        timezone_id: UTC
+
+      max_concurrent_runs: 1
+
+      parameters:
+        - name: stage
+          default: ${var.stage}
+        - name: roll_window
+          default: ${var.roll_window}
+
+      job_clusters:
+        - job_cluster_key: main
+          new_cluster: *cluster_spec
+
+      tasks:
+        - task_key: update_exposure
+          job_cluster_key: main
+          libraries: *libs
+          spark_python_task:
+            python_file: databricks/run_task.py
+            source: GIT
+            parameters:
+              - "pipelines/update_exposure.py"
+              - "--stage"
+              - "{{job.parameters.stage}}"
+
+        - task_key: update_raster_stats
+          depends_on:
+            - task_key: update_exposure
+          job_cluster_key: main
+          libraries: *libs
+          spark_python_task:
+            python_file: databricks/run_task.py
+            source: GIT
+            parameters:
+              - "pipelines/update_raster_stats.py"
+              - "--stage"
+              - "{{job.parameters.stage}}"
+
+        - task_key: update_quantiles
+          depends_on:
+            - task_key: update_raster_stats
+          job_cluster_key: main
+          libraries: *libs
+          spark_python_task:
+            python_file: databricks/run_task.py
+            source: GIT
+            parameters:
+              - "pipelines/update_exposure_quantile.py"
+              - "--stage"
+              - "{{job.parameters.stage}}"
+              - "--env"
+              - "ROLL_WINDOW={{job.parameters.roll_window}}"
+
+    init_iso3:
+      name: Flood Exposure — Init ISO3
+      description: >
+        One-off per country: download CODAB + WorldPop to blob, compute the
+        full exposure raster history and refresh app.admin_lookup. Run after
+        adding an ISO3 to src/constants.py. iso3=all re-initialises everything.
+      git_source: *git_source
+
+      permissions:
+        - group_name: dsci
+          level: CAN_MANAGE
+
+      max_concurrent_runs: 1
+
+      parameters:
+        - name: stage
+          default: ${var.stage}
+        - name: iso3
+          default: ""
+
+      job_clusters:
+        - job_cluster_key: main
+          new_cluster: *cluster_spec
+
+      tasks:
+        - task_key: init
+          job_cluster_key: main
+          libraries: *libs
+          spark_python_task:
+            python_file: databricks/run_task.py
+            source: GIT
+            parameters:
+              - "pipelines/init_iso3.py"
+              - "--stage"
+              - "{{job.parameters.stage}}"
+              - "--"
+              - "--iso3"
+              - "{{job.parameters.iso3}}"
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      profile: DEFAULT
+
+  prod:
+    mode: production
+    workspace:
+      profile: DEFAULT
+      root_path: /Workspace/Users/adm.tdowning@global.un.org/.bundle/${bundle.name}/${bundle.target}
+    run_as:
+      # TODO: replace with a service principal once one is provisioned
+      user_name: adm.tdowning@global.un.org
+    variables:
+      stage: prod
