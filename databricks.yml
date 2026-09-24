@@ -68,7 +68,12 @@ variables:
   - pypi: { package: "azure-storage-blob==12.22.0" }
   - pypi: { package: "geopandas==1.0.1" }
   - pypi: { package: "xarray==2024.7.0" }
-  - pypi: { package: "rioxarray" }
+  # rioxarray/rasterio pinned to what the GHA runner resolved (rasterio 1.5 on
+  # the cluster reads the FloodScan COG band descriptions into a long_name
+  # list that rioxarray then refuses to write back: "Number of names in the
+  # 'long_name' attribute does not equal the number of bands").
+  - pypi: { package: "rioxarray==0.19.0" }
+  - pypi: { package: "rasterio==1.4.4" }
   - pypi: { package: "dask>2024.8.0" }
   - pypi: { package: "scipy" }
   - pypi: { package: "pyarrow" }
