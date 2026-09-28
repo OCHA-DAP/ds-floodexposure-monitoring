@@ -89,15 +89,15 @@ resources:
 
     flood_exposure_monitoring:
       name: Flood Exposure Monitoring
-      description: >
-        Daily FloodScan × WorldPop population-exposure chain: exposure rasters
-        (blob) → admin raster stats (app.floodscan_exposure) → rolling
-        quantiles (app.quantile / app.current_quantile). Consumed by the flood
-        exposure app and the Nigeria flash-flood AA monitor.
+      description: "Compute daily FloodScan × [WorldPop](https://hub.worldpop.org/) population exposure and rolling quantile scores by admin unit"
       git_source: *git_source
       tags:
         databricks: job
-        output_schema: app
+        type: exposure
+        hazard: flood
+        kb: floodexposure-monitoring
+        output_schema: app.floodscan_exposure,app.floodscan_exposure_regions,app.quantile,app.quantile_regions
+        output_blob: projects/ds-floodexposure-monitoring/processed/flood_exposure
 
       permissions:
         - group_name: dsci
